@@ -1,99 +1,67 @@
 """Repository rules for downloading prebuilt LLVM/Flang binaries."""
 
 def _get_platform_info(repository_ctx):
-    """Determine the current platform and return target triple."""
-    
+    """Determine the current platform and return target triple matching archive names."""
+
     os_name = repository_ctx.os.name.lower()
     arch = repository_ctx.os.arch.lower()
-    
+
     # Normalize architecture names
     arch_map = {
         "amd64": "x86_64",
         "x86_64": "x86_64",
         "x64": "x86_64",
-        "aarch64": "aarch64",
-        "arm64": "aarch64",
+        "aarch64": "arm64",
+        "arm64": "arm64",
     }
-    arch = arch_map.get(arch, arch)
-    
-    # Determine target triple
+    normalized_arch = arch_map.get(arch, arch)
+
+    # Determine target triple matching the actual archive filenames
     if "linux" in os_name:
-        if arch == "x86_64":
-            return "x86_64-linux-gnu", "linux", arch
-        elif arch == "aarch64":
-            return "aarch64-linux-gnu", "linux", arch
+        if normalized_arch == "x86_64":
+            # TODO: suppress normal (ubuntu-latest) build and use the musl static build as default
+            # return "x86_64-unknown-linux-gnu", "linux", normalized_arch
+            return "x86_64-unknown-linux-gnu-static", "linux", normalized_arch
+        elif normalized_arch == "arm64":
+            return "aarch64-linux-gnu", "linux", normalized_arch
     elif "mac" in os_name or "darwin" in os_name:
-        if arch == "x86_64":
-            return "x86_64-apple-darwin", "macos", arch
-        elif arch == "aarch64":
-            return "aarch64-apple-darwin", "macos", arch
+        if normalized_arch == "x86_64":
+            return "x86_64-apple-darwin", "macos", normalized_arch
+        elif normalized_arch == "arm64":
+            return "arm64-apple-darwin", "macos", normalized_arch
     elif "windows" in os_name:
-        if arch == "x86_64":
-            return "x86_64-pc-windows-msvc", "windows", arch
-        elif arch == "aarch64":
-            return "aarch64-pc-windows-msvc", "windows", arch
-    
+        if normalized_arch == "x86_64":
+            return "x86_64-pc-windows-msvc", "windows", normalized_arch
+        elif normalized_arch == "arm64":
+            return "aarch64-pc-windows-msvc", "windows", normalized_arch
+
     fail("Unsupported platform: {} {}".format(os_name, arch))
 
-def _llvm_flang_prebuilt_impl(repository_ctx):
-    """Download prebuilt LLVM/Flang from GitHub releases."""
-    
-    # Get platform information
-    target_triple, os_type, arch = _get_platform_info(repository_ctx)
-    
-    # Get configuration
-    version = repository_ctx.attr.version
-    repo_owner = repository_ctx.attr.repo_owner
-    repo_name = repository_ctx.attr.repo_name
-    
-    # Construct filename and URL
-    # Format: llvm-flang-{version}-{target-triple}.tar.gz
-    filename = "llvm-flang-{}-{}.tar.gz".format(version, target_triple)
-    url = "https://github.com/{}/{}/releases/download/{}/{}".format(
-        repo_owner,
-        repo_name,
-        version,
-        filename,
-    )
-    
-    # Custom URL format if provided
-    if repository_ctx.attr.url_template:
-        url = repository_ctx.attr.url_template.format(
-            version = version,
-            target_triple = target_triple,
-            os = os_type,
-            arch = arch,
-        )
-    
-    # Download and extract
-    repository_ctx.download_and_extract(
-        url = url,
-        sha256 = repository_ctx.attr.sha256.get(target_triple, ""),
-        stripPrefix = repository_ctx.attr.strip_prefix,
-    )
-    
+def _create_build_files(repository_ctx):
+    """Create BUILD.bazel and WORKSPACE files for the LLVM/Flang repository."""
+
     # Create BUILD file for the toolchain
     repository_ctx.file("BUILD.bazel", """
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
     name = "flang-new",
-    srcs = ["bin/flang-new"],
+    srcs = glob(["bin/flang-new*"]),
 )
 
 filegroup(
     name = "llvm-ar",
-    srcs = ["bin/llvm-ar"],
+    srcs = glob(["bin/llvm-ar*"]),
 )
 
 filegroup(
     name = "clang",
-    srcs = ["bin/clang"],
+    srcs = glob(["bin/clang*"]),
 )
 
 filegroup(
     name = "lld",
-    srcs = ["bin/ld.lld"],
+    srcs = glob(["bin/ld.lld*", "bin/lld*"]),
 )
 
 filegroup(
@@ -111,19 +79,80 @@ filegroup(
 )
 
 # Export binaries for toolchain use
-exports_files([
-    "bin/flang-new",
-    "bin/llvm-ar",
-    "bin/clang",
-    "bin/ld.lld",
-])
+exports_files(
+    glob([
+        "bin/*",
+        "lib/*",
+    ]),
+)
 """)
-    
+
     # Create WORKSPACE file
     repository_ctx.file("WORKSPACE", """
 workspace(name = "{}")
 """.format(repository_ctx.name))
-    
+
+def _llvm_flang_prebuilt_impl(repository_ctx):
+    """Download prebuilt LLVM/Flang from GitHub releases or use local files."""
+
+    # Get platform information
+    target_triple, os_type, arch = _get_platform_info(repository_ctx)
+
+    # Get configuration
+    version = repository_ctx.attr.version
+    repo_owner = repository_ctx.attr.repo_owner
+    repo_name = repository_ctx.attr.repo_name
+    local_dist_dir = repository_ctx.attr.local_dist_dir
+
+    # Strip 'v' prefix from version for filename if present
+    # GitHub release tags use 'v21.1.3' but asset filenames use '21.1.3'
+    version_no_prefix = version[1:] if version.startswith("v") else version
+
+    # Determine file extension based on OS
+    file_extension = "zip" if os_type == "windows" else "tar.gz"
+
+    # Construct filename - Format: flang+llvm-{version}-{target-triple}.{tar.gz|zip}
+    filename = "flang+llvm-{}-{}.{}".format(version_no_prefix, target_triple, file_extension)
+
+    # Check for local file first if local_dist_dir is specified
+    if local_dist_dir:
+        local_path = repository_ctx.path(local_dist_dir).get_child(filename)
+        if local_path.exists:
+            repository_ctx.report_progress("Using local file: {}".format(local_path))
+            repository_ctx.extract(
+                archive = local_path,
+                stripPrefix = repository_ctx.attr.strip_prefix,
+            )
+            # Skip download, go to BUILD file creation
+            _create_build_files(repository_ctx)
+            return None
+
+    # Fall back to downloading from GitHub
+    url = "https://github.com/{}/{}/releases/download/{}/{}".format(
+        repo_owner,
+        repo_name,
+        version,
+        filename,
+    )
+
+    # Custom URL format if provided
+    if repository_ctx.attr.url_template:
+        url = repository_ctx.attr.url_template.format(
+            version = version,
+            target_triple = target_triple,
+            os = os_type,
+            arch = arch,
+        )
+
+    # Download and extract
+    repository_ctx.download_and_extract(
+        url = url,
+        sha256 = repository_ctx.attr.sha256.get(target_triple, ""),
+        stripPrefix = repository_ctx.attr.strip_prefix,
+    )
+
+    # Create BUILD and WORKSPACE files
+    _create_build_files(repository_ctx)
     return None
 
 llvm_flang_prebuilt = repository_rule(
@@ -145,12 +174,16 @@ llvm_flang_prebuilt = repository_rule(
             doc = "Custom URL template with {version}, {target_triple}, {os}, {arch} placeholders",
         ),
         "strip_prefix": attr.string(
-            default = "",
+            default = "flang+llvm-21.1.3",
             doc = "Strip prefix from extracted archive",
         ),
         "sha256": attr.string_dict(
             default = {},
             doc = "SHA256 checksums for each target triple",
+        ),
+        "local_dist_dir": attr.string(
+            default = "",
+            doc = "Local directory containing prebuilt archives (for development). If specified and file exists, will use local file instead of downloading.",
         ),
     },
     doc = """Downloads prebuilt LLVM/Flang binaries from GitHub releases.
@@ -235,12 +268,13 @@ def register_llvm_flang_toolchains(
         name = "llvm_flang",
         version = "v21.1.3",
         repo_owner = "miinso",
-        repo_name = "llvm-flang-builds",
+        repo_name = "flang",
         url_template = None,
         sha256 = {},
+        local_dist_dir = "",
         register_all = True):
     """Register LLVM/Flang toolchains for all supported platforms.
-    
+
     Args:
         name: Base name for repositories
         version: LLVM/Flang version tag
@@ -248,35 +282,39 @@ def register_llvm_flang_toolchains(
         repo_name: GitHub repository name
         url_template: Custom URL template (optional)
         sha256: Dictionary of SHA256 checksums per platform
+        local_dist_dir: Local directory with prebuilt archives (for development)
         register_all: Whether to register toolchains for all platforms
-    
+
     Example:
         register_llvm_flang_toolchains(
             version = "v21.1.3",
-            repo_owner = "myorg",
-            repo_name = "llvm-builds",
+            repo_owner = "miinso",
+            repo_name = "flang",
+            local_dist_dir = "dist",  # Use local files from dist/ folder
             sha256 = {
-                "x86_64-linux-gnu": "abc...",
+                "x86_64-unknown-linux-gnu": "abc...",
                 "aarch64-linux-gnu": "def...",
                 "x86_64-apple-darwin": "ghi...",
-                "aarch64-apple-darwin": "jkl...",
+                "arm64-apple-darwin": "jkl...",
+                "x86_64-pc-windows-msvc": "mno...",
             },
         )
     """
-    
+
     # Define all supported platforms
+    # Map internal names to target triples matching the archive names
     platforms = {
-        "linux_x86_64": "x86_64-linux-gnu",
+        "linux_x86_64": "x86_64-unknown-linux-gnu",
         "linux_aarch64": "aarch64-linux-gnu",
         "macos_x86_64": "x86_64-apple-darwin",
-        "macos_aarch64": "aarch64-apple-darwin",
+        "macos_aarch64": "arm64-apple-darwin",
         "windows_x86_64": "x86_64-pc-windows-msvc",
     }
-    
+
     # Create repositories for each platform
     for platform_name, target_triple in platforms.items():
         repo_name_full = "{}_{}".format(name, platform_name)
-        
+
         llvm_flang_prebuilt(
             name = repo_name_full,
             version = version,
@@ -284,8 +322,9 @@ def register_llvm_flang_toolchains(
             repo_name = repo_name,
             url_template = url_template,
             sha256 = sha256,
+            local_dist_dir = local_dist_dir,
         )
-    
+
     # Create multiplatform alias repository
     llvm_flang_multiplatform(
         name = name,
