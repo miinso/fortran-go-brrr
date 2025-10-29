@@ -87,6 +87,7 @@ fortran_toolchain(
         "-pedantic",
     ],
     linker_flags = [
+        "-Wl,-syslibroot,/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
         "-lm",
         "-lpthread",
     ],
@@ -122,6 +123,7 @@ fortran_toolchain(
         "-pedantic",
     ],
     linker_flags = [
+        "-Wl,-syslibroot,/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
         "-lm",
         "-lpthread",
     ],

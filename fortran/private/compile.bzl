@@ -93,6 +93,7 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
     args.add("-c")
     args.add(src.path)
     args.add("-o", obj.path)
+    # args.add("-###")
 
     # Run compilation
     ctx.actions.run(
