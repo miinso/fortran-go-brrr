@@ -10,18 +10,29 @@ module(
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
 bazel_dep(name = "platforms", version = "0.0.8")
 
-# For developing rules_fortran itself, toolchains are not auto-registered.
-# Users should register toolchains in their own MODULE.bazel:
-#
-# bazel_dep(name = "rules_fortran", version = "0.1.0")
-#
-# llvm_flang = use_extension("@rules_fortran//fortran:extensions.bzl", "llvm_flang")
-# llvm_flang.prebuilt(
-#     version = "v21.1.3",
-#     repo_owner = "your-org",
-#     repo_name = "llvm-flang-builds",
-#     sha256 = {...},
-# )
-# use_repo(llvm_flang, "llvm_flang")
-#
-# register_toolchains("@rules_fortran//fortran/toolchains:all")
+# Configure LLVM/Flang toolchain
+llvm_flang = use_extension("//fortran:extensions.bzl", "llvm_flang")
+llvm_flang.prebuilt(
+    version = "v21.1.3",
+    repo_owner = "miinso",
+    repo_name = "flang",
+    local_dist_dir = "dist",  # Use local files from dist/ folder during development
+)
+use_repo(
+    llvm_flang,
+    "llvm_flang_linux_x86_64",
+    "llvm_flang_linux_aarch64",
+    "llvm_flang_macos_x86_64",
+    "llvm_flang_macos_aarch64",
+    "llvm_flang_windows_x86_64",
+)
+
+# Register toolchains for all platforms
+register_toolchains(
+    "//fortran/toolchains:linux_x86_64_toolchain",
+    "//fortran/toolchains:linux_aarch64_toolchain",
+    "//fortran/toolchains:macos_x86_64_toolchain",
+    "//fortran/toolchains:macos_aarch64_toolchain",
+    "//fortran/toolchains:windows_x86_64_toolchain",
+    "//fortran/toolchains:wasm_toolchain",
+)

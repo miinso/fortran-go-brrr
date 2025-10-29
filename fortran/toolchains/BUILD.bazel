@@ -218,9 +218,11 @@ toolchain(
 )
 
 # ===== Toolchain Group =====
+# Note: Individual toolchains should be registered directly in MODULE.bazel
+# This filegroup is for reference only
 
 filegroup(
-    name = "all",
+    name = "all_toolchains",
     srcs = [
         ":linux_x86_64_toolchain",
         ":linux_aarch64_toolchain",
