@@ -1,0 +1,14 @@
+"""Root BUILD file for rules_fortran."""
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "defs.bzl",
+    "LICENSE",
+    "README.md",
+])
+
+filegroup(
+    name = "all_files",
+    srcs = glob(["**/*"]),
+)

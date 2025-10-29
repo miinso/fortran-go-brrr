@@ -1,0 +1,232 @@
+"""Fortran toolchain definitions using prebuilt LLVM/Flang binaries."""
+
+package(default_visibility = ["//visibility:public"])
+
+load("//fortran:toolchain.bzl", "fortran_toolchain")
+
+# ===== Linux x86_64 Toolchain =====
+
+fortran_toolchain(
+    name = "linux_x86_64_toolchain_impl",
+    archiver = "@llvm_flang_linux_x86_64//:llvm-ar",
+    compiler = "@llvm_flang_linux_x86_64//:flang-new",
+    linker = "@llvm_flang_linux_x86_64//:flang-new",
+    compiler_flags = [
+        "-Wall",
+        "-Wextra",
+        "-pedantic",
+    ],
+    linker_flags = [
+        "-lm",
+        "-lpthread",
+    ],
+    module_flag_format = "-J{}",
+    supports_module_path = True,
+    tool_deps = ["@llvm_flang_linux_x86_64//:compiler_files"],
+)
+
+toolchain(
+    name = "linux_x86_64_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    toolchain = ":linux_x86_64_toolchain_impl",
+    toolchain_type = "//fortran:toolchain_type",
+)
+
+# ===== Linux aarch64 Toolchain =====
+
+fortran_toolchain(
+    name = "linux_aarch64_toolchain_impl",
+    archiver = "@llvm_flang_linux_aarch64//:llvm-ar",
+    compiler = "@llvm_flang_linux_aarch64//:flang-new",
+    linker = "@llvm_flang_linux_aarch64//:flang-new",
+    compiler_flags = [
+        "-Wall",
+        "-Wextra",
+        "-pedantic",
+    ],
+    linker_flags = [
+        "-lm",
+        "-lpthread",
+    ],
+    module_flag_format = "-J{}",
+    supports_module_path = True,
+    tool_deps = ["@llvm_flang_linux_aarch64//:compiler_files"],
+)
+
+toolchain(
+    name = "linux_aarch64_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+    toolchain = ":linux_aarch64_toolchain_impl",
+    toolchain_type = "//fortran:toolchain_type",
+)
+
+# ===== macOS x86_64 Toolchain =====
+
+fortran_toolchain(
+    name = "macos_x86_64_toolchain_impl",
+    archiver = "@llvm_flang_macos_x86_64//:llvm-ar",
+    compiler = "@llvm_flang_macos_x86_64//:flang-new",
+    linker = "@llvm_flang_macos_x86_64//:flang-new",
+    compiler_flags = [
+        "-Wall",
+        "-Wextra",
+        "-pedantic",
+    ],
+    linker_flags = [
+        "-lm",
+        "-lpthread",
+    ],
+    module_flag_format = "-J{}",
+    supports_module_path = True,
+    tool_deps = ["@llvm_flang_macos_x86_64//:compiler_files"],
+)
+
+toolchain(
+    name = "macos_x86_64_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+    target_compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+    toolchain = ":macos_x86_64_toolchain_impl",
+    toolchain_type = "//fortran:toolchain_type",
+)
+
+# ===== macOS aarch64 (Apple Silicon) Toolchain =====
+
+fortran_toolchain(
+    name = "macos_aarch64_toolchain_impl",
+    archiver = "@llvm_flang_macos_aarch64//:llvm-ar",
+    compiler = "@llvm_flang_macos_aarch64//:flang-new",
+    linker = "@llvm_flang_macos_aarch64//:flang-new",
+    compiler_flags = [
+        "-Wall",
+        "-Wextra",
+        "-pedantic",
+    ],
+    linker_flags = [
+        "-lm",
+        "-lpthread",
+    ],
+    module_flag_format = "-J{}",
+    supports_module_path = True,
+    tool_deps = ["@llvm_flang_macos_aarch64//:compiler_files"],
+)
+
+toolchain(
+    name = "macos_aarch64_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+    target_compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+    toolchain = ":macos_aarch64_toolchain_impl",
+    toolchain_type = "//fortran:toolchain_type",
+)
+
+# ===== Windows x86_64 Toolchain =====
+
+fortran_toolchain(
+    name = "windows_x86_64_toolchain_impl",
+    archiver = "@llvm_flang_windows_x86_64//:llvm-ar",
+    compiler = "@llvm_flang_windows_x86_64//:flang-new",
+    linker = "@llvm_flang_windows_x86_64//:flang-new",
+    compiler_flags = [
+        "-Wall",
+        "-Wextra",
+    ],
+    linker_flags = [],
+    module_flag_format = "-J{}",
+    supports_module_path = True,
+    tool_deps = ["@llvm_flang_windows_x86_64//:compiler_files"],
+)
+
+toolchain(
+    name = "windows_x86_64_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:windows",
+        "@platforms//cpu:x86_64",
+    ],
+    target_compatible_with = [
+        "@platforms//os:windows",
+        "@platforms//cpu:x86_64",
+    ],
+    toolchain = ":windows_x86_64_toolchain_impl",
+    toolchain_type = "//fortran:toolchain_type",
+)
+
+# ===== WebAssembly Toolchain =====
+# All prebuilt binaries include wasm32 target support
+
+fortran_toolchain(
+    name = "wasm_toolchain_impl",
+    archiver = select({
+        "@platforms//os:linux": "@llvm_flang_linux_x86_64//:llvm-ar",
+        "@platforms//os:macos": "@llvm_flang_macos_aarch64//:llvm-ar",
+        "//conditions:default": "@llvm_flang_linux_x86_64//:llvm-ar",
+    }),
+    compiler = select({
+        "@platforms//os:linux": "@llvm_flang_linux_x86_64//:flang-new",
+        "@platforms//os:macos": "@llvm_flang_macos_aarch64//:flang-new",
+        "//conditions:default": "@llvm_flang_linux_x86_64//:flang-new",
+    }),
+    linker = select({
+        "@platforms//os:linux": "@llvm_flang_linux_x86_64//:lld",
+        "@platforms//os:macos": "@llvm_flang_macos_aarch64//:lld",
+        "//conditions:default": "@llvm_flang_linux_x86_64//:lld",
+    }),
+    compiler_flags = [
+        "--target=wasm32-unknown-unknown",
+        "-O2",
+    ],
+    linker_flags = [
+        "--target=wasm32-unknown-unknown",
+        "-fuse-ld=lld",
+    ],
+    module_flag_format = "-J{}",
+    supports_module_path = True,
+)
+
+toolchain(
+    name = "wasm_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [
+        "@platforms//cpu:wasm32",
+    ],
+    toolchain = ":wasm_toolchain_impl",
+    toolchain_type = "//fortran:toolchain_type",
+)
+
+# ===== Toolchain Group =====
+
+filegroup(
+    name = "all",
+    srcs = [
+        ":linux_x86_64_toolchain",
+        ":linux_aarch64_toolchain",
+        ":macos_x86_64_toolchain",
+        ":macos_aarch64_toolchain",
+        ":windows_x86_64_toolchain",
+        ":wasm_toolchain",
+    ],
+)

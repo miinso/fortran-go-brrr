@@ -1,0 +1,28 @@
+# Bazel
+/bazel-*
+.bazelrc.local
+MODULE.bazel.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.o
+*.mod
+*.a
+*.so
+*.dylib
+*.dll
+
+# Temporary files
+*.tmp
+*.bak
+.*.sw[op]

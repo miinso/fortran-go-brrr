@@ -1,0 +1,52 @@
+"""Examples for rules_fortran."""
+
+load("//:defs.bzl", "fortran_binary", "fortran_library", "fortran_test")
+
+# ===== Simple Hello World =====
+
+fortran_binary(
+    name = "hello",
+    srcs = ["hello.f90"],
+)
+
+# ===== Library Example =====
+
+fortran_library(
+    name = "math_lib",
+    srcs = [
+        "math_module.f90",
+        "statistics.f90",
+    ],
+    copts = ["-O2"],
+)
+
+fortran_library(
+    name = "io_lib",
+    srcs = ["io_module.f90"],
+)
+
+fortran_library(
+    name = "core_lib",
+    srcs = ["core.f90"],
+)
+
+# ===== Application with Dependencies =====
+
+fortran_binary(
+    name = "app",
+    srcs = ["main.f90"],
+    copts = ["-O2"],
+    deps = [
+        ":core_lib",
+        ":io_lib",
+        ":math_lib",
+    ],
+)
+
+# ===== Test Example =====
+
+fortran_test(
+    name = "math_test",
+    srcs = ["math_test.f90"],
+    deps = [":math_lib"],
+)

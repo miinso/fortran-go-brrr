@@ -1,0 +1,27 @@
+"""rules_fortran - Bazel rules for Fortran with LLVM Flang."""
+
+module(
+    name = "rules_fortran",
+    version = "0.1.0",
+    compatibility_level = 1,
+)
+
+# Dependencies
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "platforms", version = "0.0.8")
+
+# For developing rules_fortran itself, toolchains are not auto-registered.
+# Users should register toolchains in their own MODULE.bazel:
+#
+# bazel_dep(name = "rules_fortran", version = "0.1.0")
+#
+# llvm_flang = use_extension("@rules_fortran//fortran:extensions.bzl", "llvm_flang")
+# llvm_flang.prebuilt(
+#     version = "v21.1.3",
+#     repo_owner = "your-org",
+#     repo_name = "llvm-flang-builds",
+#     sha256 = {...},
+# )
+# use_repo(llvm_flang, "llvm_flang")
+#
+# register_toolchains("@rules_fortran//fortran/toolchains:all")

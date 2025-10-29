@@ -1,0 +1,11 @@
+"""Private implementation files for rules_fortran."""
+
+package(default_visibility = ["//fortran:__subpackages__"])
+
+exports_files([
+    "providers.bzl",
+    "compile.bzl",
+    "fortran_library.bzl",
+    "fortran_binary.bzl",
+    "fortran_test.bzl",
+])

@@ -1,0 +1,16 @@
+"""Fortran package BUILD file."""
+
+package(default_visibility = ["//visibility:public"])
+
+# Toolchain type for Fortran compilation
+toolchain_type(
+    name = "toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# Export public API files
+exports_files([
+    "toolchain.bzl",
+    "llvm_repositories.bzl",
+    "extensions.bzl",
+])

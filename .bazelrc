@@ -1,0 +1,66 @@
+# .bazelrc for rules_fortran
+
+# ===== Common Settings =====
+
+# Use the Fortran toolchain
+build --incompatible_enable_cc_toolchain_resolution
+
+# Show detailed errors
+build --verbose_failures
+
+# Use colors
+common --color=yes
+
+# Enable disk cache
+build --disk_cache=~/.cache/bazel
+
+# ===== Optimization Configs =====
+
+# Debug
+build:dbg --compilation_mode=dbg
+build:dbg --copt=-g
+build:dbg --copt=-O0
+
+# Optimized
+build:opt --compilation_mode=opt
+build:opt --copt=-O3
+build:opt --copt=-march=native
+
+# Fast build (default)
+build:fastbuild --compilation_mode=fastbuild
+
+# ===== Platform Configs =====
+
+# Linux x86_64
+build:linux_x86_64 --platforms=//platforms:linux_x86_64
+
+# Linux aarch64  
+build:linux_aarch64 --platforms=//platforms:linux_aarch64
+
+# macOS x86_64
+build:macos_x86_64 --platforms=//platforms:macos_x86_64
+
+# macOS aarch64
+build:macos_aarch64 --platforms=//platforms:macos_aarch64
+
+# Windows x86_64
+build:windows_x86_64 --platforms=//platforms:windows_x86_64
+
+# WebAssembly
+build:wasm --platforms=//platforms:wasm32
+build:wasm --copt=--target=wasm32-unknown-unknown
+build:wasm --linkopt=--target=wasm32-unknown-unknown
+
+# ===== Test Settings =====
+
+test --test_output=errors
+test --test_summary=detailed
+
+# ===== CI Settings =====
+
+build:ci --verbose_failures
+build:ci --announce_rc
+build:ci --show_timestamps
+
+# Try to import local overrides
+try-import %workspace%/.bazelrc.local
