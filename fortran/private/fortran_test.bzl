@@ -55,6 +55,7 @@ def _fortran_test_impl(ctx):
         outputs = [executable],
         mnemonic = "FortranLinkTest",
         progress_message = "Linking Fortran test {}".format(executable.short_path),
+        use_default_shell_env = True,
     )
     
     # Create runfiles
