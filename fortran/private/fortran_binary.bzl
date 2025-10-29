@@ -4,19 +4,19 @@ load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
 load(":compile.bzl", "compile_fortran")
 
 def _fortran_binary_impl(ctx):
-    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"]
-    
+    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
+
     # Collect dependencies
     transitive_objects = []
     module_map = {}
     link_flags = []
-    
+
     for dep in ctx.attr.deps:
         if FortranInfo in dep:
             transitive_objects.append(dep[FortranInfo].transitive_objects)
             module_map.update(dep[FortranInfo].module_map)
             link_flags.extend(dep[FortranInfo].link_flags)
-    
+
     # Compile sources
     objects = []
     for src in ctx.files.srcs:

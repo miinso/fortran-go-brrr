@@ -4,8 +4,8 @@ load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
 load(":compile.bzl", "compile_fortran")
 
 def _fortran_library_impl(ctx):
-    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"]
-    
+    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
+
     # Collect transitive dependencies
     transitive_sources = [dep[FortranInfo].transitive_sources for dep in ctx.attr.deps if FortranInfo in dep]
     transitive_modules = [dep[FortranInfo].transitive_modules for dep in ctx.attr.deps if FortranInfo in dep]

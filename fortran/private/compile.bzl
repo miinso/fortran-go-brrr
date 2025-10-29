@@ -47,30 +47,30 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
     obj = ctx.actions.declare_file(
         "{}_objs/{}.o".format(ctx.label.name, src_base)
     )
-    
+
     # Declare a directory for module outputs (one per source file)
     # This allows 0 or more .mod files to be created
     module_output_dir = ctx.actions.declare_directory(
         "{}_modules/{}".format(ctx.label.name, src_base)
     )
-    
+
     # Build arguments
     args = ctx.actions.args()
-    
+
     # Compiler flags
     args.add_all(toolchain.compiler_flags)
     args.add_all(copts)
-    
+
     # Free-form or fixed-form
     if _is_free_form(src):
         args.add("-ffree-form")
     else:
         args.add("-ffixed-form")
-    
+
     # Preprocessing
     if _needs_preprocessing(src):
         args.add("-cpp")
-    
+
     # Module output directory - where this compilation writes .mod files
     if toolchain.supports_module_path:
         flag = toolchain.module_flag_format.format(module_output_dir.path)
@@ -84,16 +84,16 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
         if mod_dir:
             module_dirs.append(mod_dir.path)
             input_module_dirs.append(mod_dir)
-    
+
     for dir_path in module_dirs:
         if toolchain.supports_module_path:
             args.add("-I" + dir_path)
-    
+
     # Compile command
     args.add("-c")
     args.add(src.path)
     args.add("-o", obj.path)
-    
+
     # Run compilation
     ctx.actions.run(
         executable = toolchain.compiler,
@@ -106,7 +106,7 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
         mnemonic = "FortranCompile",
         progress_message = "Compiling Fortran {}".format(src.short_path),
     )
-    
+
     return CompileResult(
         object = obj,
         module = module_output_dir,  # Return directory instead of specific file

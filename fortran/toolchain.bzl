@@ -92,7 +92,7 @@ fortran_toolchain = rule(
 
 def _fortran_toolchain_alias_impl(ctx):
     """Implementation of fortran_toolchain_alias."""
-    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"]
+    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
     return [
         DefaultInfo(files = toolchain.all_files),
         toolchain,

@@ -4,8 +4,8 @@ load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
 load(":compile.bzl", "compile_fortran")
 
 def _fortran_test_impl(ctx):
-    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"]
-    
+    toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
+
     # Collect dependencies
     transitive_objects = []
     module_map = {}
