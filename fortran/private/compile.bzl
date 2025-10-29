@@ -43,14 +43,15 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
         CompileResult with object and module files
     """
     # Declare output files
+    src_base = src.basename.replace(".", "_")
     obj = ctx.actions.declare_file(
-        "{}_objs/{}.o".format(ctx.label.name, src.basename.replace(".", "_"))
+        "{}_objs/{}.o".format(ctx.label.name, src_base)
     )
     
-    # Assume this file might create a module
-    module_name = _extract_module_name(src)
-    mod = ctx.actions.declare_file(
-        "{}_modules/{}.mod".format(ctx.label.name, module_name)
+    # Declare a directory for module outputs (one per source file)
+    # This allows 0 or more .mod files to be created
+    module_output_dir = ctx.actions.declare_directory(
+        "{}_modules/{}".format(ctx.label.name, src_base)
     )
     
     # Build arguments
@@ -70,31 +71,28 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
     if _needs_preprocessing(src):
         args.add("-cpp")
     
-    # Module output directory
-    module_dir = mod.dirname
+    # Module output directory - where this compilation writes .mod files
     if toolchain.supports_module_path:
-        flag = toolchain.module_flag_format.format(module_dir)
+        flag = toolchain.module_flag_format.format(module_output_dir.path)
         args.add(flag)
     
     # Module search paths from dependencies
-    module_dirs = depset(transitive = [
-        depset([m.dirname for m in dep_module_map.values()])
-        for dep_module_map in [module_map]
-    ]).to_list()
+    # module_map now contains directories (not individual .mod files)
+    module_dirs = []
+    input_module_dirs = []
+    for mod_dir in module_map.values():
+        if mod_dir:
+            module_dirs.append(mod_dir.path)
+            input_module_dirs.append(mod_dir)
     
-    for dir in depset(module_dirs).to_list():
+    for dir_path in module_dirs:
         if toolchain.supports_module_path:
-            args.add("-I" + dir)
+            args.add("-I" + dir_path)
     
     # Compile command
     args.add("-c")
     args.add(src.path)
     args.add("-o", obj.path)
-    
-    # Collect input modules
-    input_modules = []
-    for mod_file in module_map.values():
-        input_modules.append(mod_file)
     
     # Run compilation
     ctx.actions.run(
@@ -102,14 +100,14 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
         arguments = [args],
         inputs = depset(
             direct = [src],
-            transitive = [depset(input_modules), toolchain.all_files],
+            transitive = [depset(input_module_dirs), toolchain.all_files],
         ),
-        outputs = [obj, mod],
+        outputs = [obj, module_output_dir],
         mnemonic = "FortranCompile",
         progress_message = "Compiling Fortran {}".format(src.short_path),
     )
     
     return CompileResult(
         object = obj,
-        module = mod if _is_free_form(src) else None,  # Only modern Fortran has modules
+        module = module_output_dir,  # Return directory instead of specific file
     )

@@ -33,9 +33,10 @@ def _fortran_library_impl(ctx):
         objects.append(result.object)
         if result.module:
             modules.append(result.module)
-            # Extract module name from file
-            module_name = result.module.basename.replace(".mod", "")
-            local_module_map[module_name] = result.module
+            # Use source basename as key for the module directory
+            # The directory may contain 0 or more .mod files
+            src_key = src.basename.replace(".", "_")
+            local_module_map[src_key] = result.module
     
     # Update module map
     module_map.update(local_module_map)
