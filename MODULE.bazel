@@ -36,3 +36,14 @@ register_toolchains(
     "//fortran/toolchains:windows_x86_64_toolchain",
     "//fortran/toolchains:wasm_toolchain",
 )
+
+# Netlib BLAS (for examples)
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "blas",
+    url = "https://www.netlib.org/blas/blas-3.12.0.tgz",
+    sha256 = "ccc41b5d088e50db0030317ae9b0c9af375710c1392acad1fe209602da5a5aad",
+    strip_prefix = "BLAS-3.12.0",
+    build_file = "//examples/refblas:blas.BUILD",
+)
