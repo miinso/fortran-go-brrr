@@ -1,21 +1,25 @@
+load("@rules_python//python:defs.bzl", "py_test")
 load("//:defs.bzl", "fortran_binary")
 
 # Example: Simple BLAS DGEMM test
 fortran_binary(
     name = "main",
     srcs = ["main.f90"],
-    deps = ["@blas//:double"],
     copts = ["-O2"],
+    deps = ["@blas//:double"],
 )
 
 # Export input files for Level 2 and 3 tests
-exports_files(glob(["data/*.in"]))
+exports_files(
+    glob(["data/*.in"]),
+)
 
-# Level 2 tests (using single generic wrapper script)
+# Level 2 tests
 [
-    sh_test(
+    py_test(
         name = "%sblat2" % prefix,
-        srcs = ["run.sh"],
+        size = "medium",
+        srcs = ["run.py"],
         args = [
             "$(location @blas//:%sblat2)" % prefix,
             "$(location data/%sblat2.in)" % prefix,
@@ -24,16 +28,17 @@ exports_files(glob(["data/*.in"]))
             "@blas//:%sblat2" % prefix,
             "data/%sblat2.in" % prefix,
         ],
-        size = "medium",
+        main = "run.py",
     )
     for prefix in ["s", "d", "c", "z"]
 ]
 
-# Level 3 tests (using single generic wrapper script)
+# Level 3 tests
 [
-    sh_test(
+    py_test(
         name = "%sblat3" % prefix,
-        srcs = ["run.sh"],
+        size = "medium",
+        srcs = ["run.py"],
         args = [
             "$(location @blas//:%sblat3)" % prefix,
             "$(location data/%sblat3.in)" % prefix,
@@ -42,7 +47,7 @@ exports_files(glob(["data/*.in"]))
             "@blas//:%sblat3" % prefix,
             "data/%sblat3.in" % prefix,
         ],
-        size = "medium",
+        main = "run.py",
     )
     for prefix in ["s", "d", "c", "z"]
 ]

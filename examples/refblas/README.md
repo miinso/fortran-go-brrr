@@ -6,7 +6,7 @@ This example demonstrates how to use the reference BLAS (Basic Linear Algebra Su
 
 - **`main.f90`** - Simple DGEMM (matrix multiplication) example
 - **`BUILD.bazel`** - Bazel build configuration
-- **`run.sh`** - Wrapper script for running BLAS tests with input redirection
+- **`run.py`** - Executable runner for BLAS tests
 - **`data/`** - Test input files for BLAS Level 2 and Level 3 tests
 
 ## Building and Running
@@ -22,6 +22,9 @@ bazel run //examples/refblas:main
 ```
 
 ### Run BLAS tests:
+
+All tests are cross-platform and work on Windows, Linux, and macOS:
+
 ```bash
 # Run all BLAS Level 2 and Level 3 tests
 bazel test //examples/refblas:all
