@@ -1,0 +1,11 @@
+load("@rules_python//python:defs.bzl", "py_test")
+load("//:defs.bzl", "fortran_binary")
+
+# simple DGESV run
+fortran_binary(
+    name = "main",
+    srcs = ["main.f90"],
+    copts = ["-O2"],
+    deps = ["@lapack"],
+)
+

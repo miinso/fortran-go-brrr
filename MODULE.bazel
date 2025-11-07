@@ -50,3 +50,12 @@ http_archive(
     strip_prefix = "lapack-3.12.1",
     build_file = "//examples/refblas:blas.BUILD",
 )
+
+# Netlib LAPACK (for examples)
+http_archive(
+    name = "lapack",
+    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
+    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
+    strip_prefix = "lapack-3.12.1",
+    build_file = "//examples/lapack:lapack.BUILD",
+)
