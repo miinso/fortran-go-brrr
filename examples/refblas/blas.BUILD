@@ -72,6 +72,7 @@ SBLAS3_SRCS = [
     "ssyr2k.f",
     "strmm.f",
     "strsm.f",
+    "sgemmtr.f",
 ]
 
 # Double precision BLAS Level 1 routines
@@ -119,6 +120,7 @@ DBLAS3_SRCS = [
     "dsyr2k.f",
     "dtrmm.f",
     "dtrsm.f",
+    "dgemmtr.f",
 ]
 
 # Complex precision BLAS Level 1 routines
@@ -180,6 +182,7 @@ CBLAS3_SRCS = [
     "chemm.f",
     "cherk.f",
     "cher2k.f",
+    "cgemmtr.f",
 ]
 
 # Double complex precision BLAS Level 1 routines
@@ -241,6 +244,7 @@ ZBLAS3_SRCS = [
     "zhemm.f",
     "zherk.f",
     "zher2k.f",
+    "zgemmtr.f",
 ]
 
 # Compiler flags matching netlib BLAS defaults
