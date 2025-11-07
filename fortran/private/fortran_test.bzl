@@ -26,6 +26,7 @@ def _fortran_test_impl(ctx):
             src = src,
             module_map = module_map,
             copts = ctx.attr.copts,
+            defines = ctx.attr.defines,
         )
         objects.append(result.object)
     
@@ -96,6 +97,9 @@ fortran_test = rule(
         ),
         "copts": attr.string_list(
             doc = "Additional compiler options.",
+        ),
+        "defines": attr.string_list(
+            doc = "Preprocessor defines for .F files (e.g., ['_OPENMP', 'USE_MPI']).",
         ),
         "linkopts": attr.string_list(
             doc = "Additional linker options.",

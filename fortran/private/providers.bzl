@@ -24,6 +24,8 @@ FortranToolchainInfo = provider(
         "archiver": "The archiver executable (ar)",
         "compiler_flags": "Default compiler flags",
         "linker_flags": "Default linker flags",
+        "preprocessor_flag": "Flag to enable preprocessing (e.g., '-cpp', '-fpp')",
+        "preprocessor_flags": "Default preprocessor flags (e.g., ['-D_OPENMP'])",
         "supports_module_path": "Whether compiler supports -J flag for modules",
         "module_flag_format": "Format string for module path flag (e.g., '-J{}', '-module {}')",
         "all_files": "All toolchain files",

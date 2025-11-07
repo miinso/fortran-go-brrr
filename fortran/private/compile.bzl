@@ -29,7 +29,7 @@ def _extract_module_name(src):
             break
     return basename.lower()
 
-def compile_fortran(ctx, toolchain, src, module_map, copts):
+def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
     """Compile a single Fortran source file.
     
     Args:
@@ -38,6 +38,7 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
         src: Source file to compile
         module_map: Dictionary of module names to module files
         copts: Additional compilation options
+        defines: Preprocessor defines (e.g., ['_OPENMP', 'USE_MPI'])
         
     Returns:
         CompileResult with object and module files
@@ -69,7 +70,15 @@ def compile_fortran(ctx, toolchain, src, module_map, copts):
 
     # Preprocessing
     if _needs_preprocessing(src):
-        args.add("-cpp")
+        # Add preprocessor enable flag (e.g., -cpp or -fpp)
+        args.add(toolchain.preprocessor_flag)
+        
+        # Add toolchain-level preprocessor flags
+        args.add_all(toolchain.preprocessor_flags)
+        
+        # Add target-specific preprocessor defines
+        for define in defines:
+            args.add("-D" + define)
 
     # Module output directory - where this compilation writes .mod files
     if toolchain.supports_module_path:

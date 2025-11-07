@@ -9,6 +9,8 @@ def _fortran_toolchain_impl(ctx):
         archiver = ctx.file.archiver,
         compiler_flags = ctx.attr.compiler_flags,
         linker_flags = ctx.attr.linker_flags,
+        preprocessor_flag = ctx.attr.preprocessor_flag,
+        preprocessor_flags = ctx.attr.preprocessor_flags,
         supports_module_path = ctx.attr.supports_module_path,
         module_flag_format = ctx.attr.module_flag_format,
         all_files = depset(
@@ -74,6 +76,14 @@ fortran_toolchain = rule(
         "linker_flags": attr.string_list(
             default = [],
             doc = "Default flags to pass to the linker.",
+        ),
+        "preprocessor_flag": attr.string(
+            default = "-cpp",
+            doc = "Flag to enable preprocessing (e.g., '-cpp' for gfortran/flang, '-fpp' for ifort).",
+        ),
+        "preprocessor_flags": attr.string_list(
+            default = [],
+            doc = "Default preprocessor flags (e.g., ['-D_OPENMP', '-DUSE_MPI']).",
         ),
         "supports_module_path": attr.bool(
             default = True,

@@ -29,6 +29,7 @@ def _fortran_library_impl(ctx):
             src = src,
             module_map = module_map,
             copts = ctx.attr.copts,
+            defines = ctx.attr.defines,
         )
         objects.append(result.object)
         if result.module:
@@ -104,6 +105,9 @@ fortran_library = rule(
         ),
         "copts": attr.string_list(
             doc = "Additional compiler options to pass to the Fortran compiler.",
+        ),
+        "defines": attr.string_list(
+            doc = "Preprocessor defines for .F files (e.g., ['_OPENMP', 'USE_MPI']).",
         ),
         "linkopts": attr.string_list(
             doc = "Additional linker options (propagated to binaries).",
