@@ -12,8 +12,8 @@ fortran_toolchain(
     compiler = "@llvm_flang_linux_x86_64//:flang-new",
     linker = "@llvm_flang_linux_x86_64//:flang-new",
     compiler_flags = [
-        "-Wall",
-        "-Wextra",
+        # "-Wall",
+        # "-Wextra",
         "-pedantic",
     ],
     linker_flags = [
@@ -47,8 +47,8 @@ fortran_toolchain(
     compiler = "@llvm_flang_linux_aarch64//:flang-new",
     linker = "@llvm_flang_linux_aarch64//:flang-new",
     compiler_flags = [
-        "-Wall",
-        "-Wextra",
+        # "-Wall",
+        # "-Wextra",
         "-pedantic",
     ],
     linker_flags = [
@@ -82,8 +82,8 @@ fortran_toolchain(
     compiler = "@llvm_flang_macos_x86_64//:flang-new",
     linker = "@llvm_flang_macos_x86_64//:flang-new",
     compiler_flags = [
-        "-Wall",
-        "-Wextra",
+        # "-Wall",
+        # "-Wextra",
         "-pedantic",
     ],
     linker_flags = [
@@ -118,8 +118,8 @@ fortran_toolchain(
     compiler = "@llvm_flang_macos_aarch64//:flang-new",
     linker = "@llvm_flang_macos_aarch64//:flang-new",
     compiler_flags = [
-        "-Wall",
-        "-Wextra",
+        # "-Wall",
+        # "-Wextra",
         "-pedantic",
     ],
     linker_flags = [
@@ -154,8 +154,8 @@ fortran_toolchain(
     compiler = "@llvm_flang_windows_x86_64//:flang-new",
     linker = "@llvm_flang_windows_x86_64//:flang-new",
     compiler_flags = [
-        "-Wall",
-        "-Wextra",
+        # "-Wall",
+        # "-Wextra",
     ],
     linker_flags = [],
     module_flag_format = "-J{}",
