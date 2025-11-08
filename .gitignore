@@ -26,3 +26,12 @@ Thumbs.db
 *.tmp
 *.bak
 .*.sw[op]
+
+# Local distribution files
+dist
+dist/*.tar.gz
+dist/*.zip
+
+docs
+
+lapack-3.12.1

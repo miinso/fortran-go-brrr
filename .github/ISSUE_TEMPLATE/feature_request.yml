@@ -1,0 +1,83 @@
+name: Feature request
+description: Suggest a new feature for rules_fortran
+labels: ["enhancement"]
+assignees:
+  - miinso
+body:
+  - type: markdown
+    attributes:
+      value: >
+        **Attention:** if this is a _question_ about how to use rules_fortran or Fortran with Bazel,
+        please start a discussion in [GitHub Discussions](https://github.com/miinso/fortran-go-brrr/discussions)
+        or ask on [Bazel Slack](https://slack.bazel.build/) instead!
+  - type: textarea
+    id: desc
+    attributes:
+      label: >
+        Description of the feature request:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which component does this feature relate to?
+      description: Help us understand the scope. Select all that apply.
+      multiple: true
+      options:
+        - Compilation
+        - Linking
+        - Module Dependencies
+        - Toolchain Configuration
+        - C/Fortran Interop
+        - Provider Design (CcInfo, FortranInfo)
+        - Testing
+        - Documentation
+        - Examples
+        - Performance
+  - type: textarea
+    id: problem
+    attributes:
+      label: >
+        What underlying problem are you trying to solve with this feature?
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which platform(s) would this affect?
+      description: Select all that apply
+      multiple: true
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - All
+        - Unknown
+  - type: input
+    id: bazel-version
+    attributes:
+      label: >
+        What is the output of `bazel info release`?
+  - type: input
+    id: flang-version
+    attributes:
+      label: >
+        Which version of flang are you using? (e.g., v21.1.3)
+  - type: textarea
+    id: use-case
+    attributes:
+      label: >
+        What is your use case? How would this feature help you?
+      description: >
+        Provide a concrete example of what you're trying to accomplish.
+        Include code examples if relevant.
+  - type: textarea
+    id: relevant-info
+    attributes:
+      label: Have you found anything relevant by searching the web?
+      description: >
+        Places to look:
+
+         * StackOverflow: http://stackoverflow.com/questions/tagged/bazel
+         * GitHub issues: https://github.com/bazelbuild/bazel/issues
+         * Email threads on https://groups.google.com/forum/#!forum/bazel-discuss
+  - type: textarea
+    id: extras
+    attributes:
+      label: Any other information, logs, or outputs that you want to share?
