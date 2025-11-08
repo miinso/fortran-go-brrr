@@ -104,6 +104,11 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
     args.add("-o", obj.path)
     # args.add("-###")
 
+    # Use param file to avoid "Argument list too long" errors on Windows/Linux
+    # This is especially important for large projects like LAPACK with thousands of module directories
+    args.use_param_file("@%s", use_always = True)
+    args.set_param_file_format("multiline")
+
     # Run compilation
     ctx.actions.run(
         executable = toolchain.compiler,

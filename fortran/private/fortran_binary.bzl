@@ -46,6 +46,10 @@ def _fortran_binary_impl(ctx):
     args.add_all(link_flags)
     args.add_all(ctx.attr.linkopts)
     
+    # Use param file to avoid "Argument list too long" errors on Windows/Linux
+    args.use_param_file("@%s", use_always = True)
+    args.set_param_file_format("multiline")
+    
     ctx.actions.run(
         executable = toolchain.linker,
         arguments = [args],

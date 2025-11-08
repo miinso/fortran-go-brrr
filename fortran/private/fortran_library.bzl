@@ -45,6 +45,10 @@ def _fortran_library_impl(ctx):
     # Create static library if there are objects
     if objects:
         archive = ctx.actions.declare_file("lib{}.a".format(ctx.label.name))
+        
+        args.use_param_file("@%s", use_always = True)
+        args.set_param_file_format("multiline")
+        
         ctx.actions.run(
             executable = toolchain.archiver,
             arguments = ["rcs", archive.path] + [obj.path for obj in objects],
