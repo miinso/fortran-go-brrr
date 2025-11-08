@@ -7,13 +7,13 @@ def _fortran_binary_impl(ctx):
     toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
 
     # Collect dependencies
-    transitive_objects = []
+    transitive_libraries = []
     module_map = {}
     link_flags = []
 
     for dep in ctx.attr.deps:
         if FortranInfo in dep:
-            transitive_objects.append(dep[FortranInfo].transitive_objects)
+            transitive_libraries.append(dep[FortranInfo].transitive_libraries)
             module_map.update(dep[FortranInfo].module_map)
             link_flags.extend(dep[FortranInfo].link_flags)
 
@@ -30,17 +30,40 @@ def _fortran_binary_impl(ctx):
         )
         objects.append(result.object)
     
-    # Collect all objects
-    all_objects = depset(
-        direct = objects,
-        transitive = transitive_objects,
+    # Collect all libraries from dependencies
+    all_libraries = depset(
+        transitive = transitive_libraries,
     ).to_list()
     
     # Link executable
     executable = ctx.actions.declare_file(ctx.label.name)
     
     args = ctx.actions.args()
-    args.add_all(all_objects)
+    
+    # Add local object files first
+    for obj in objects:
+        args.add(obj)
+    
+    # On Unix-like systems, the linker processes libraries in order and only extracts
+    # symbols that are currently needed. This can cause issues with circular dependencies
+    # or when a library A depends on library B, but B comes first in the link order.
+    #
+    # Solutions:
+    # 1. Use -Wl,--start-group ... -Wl,--end-group (Linux) or -Wl,-(  -Wl,-) (BSD)
+    # 2. Specify libraries in correct dependency order (trickier to compute?)
+    # 3. Specify libraries twice (simpler?)
+    #
+    # let's try #3: list all libraries twice
+    # TODO: see how rules_cc people handled this one
+    
+    # First pass: Add all library files
+    for lib in all_libraries:
+        args.add(lib)
+    
+    # Second pass: Add them again to resolve circular/reverse dependencies
+    for lib in all_libraries:
+        args.add(lib)
+    
     args.add("-o", executable.path)
     args.add_all(toolchain.linker_flags)
     args.add_all(link_flags)
@@ -54,7 +77,7 @@ def _fortran_binary_impl(ctx):
         executable = toolchain.linker,
         arguments = [args],
         inputs = depset(
-            direct = all_objects,
+            direct = objects + all_libraries,
             transitive = [toolchain.all_files],
         ),
         outputs = [executable],
