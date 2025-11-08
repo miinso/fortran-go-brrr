@@ -10,6 +10,7 @@ FortranInfo = provider(
         "transitive_sources": "depset of source files (for building)",
         "transitive_modules": "depset of module files (.mod)",
         "transitive_objects": "depset of object files (.o)",
+        "transitive_libraries": "depset of static library files (.a)",
         "module_map": "dict mapping module names to module files",
         "compile_flags": "list of compilation flags",
         "link_flags": "list of link flags",

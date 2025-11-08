@@ -10,6 +10,7 @@ def _fortran_library_impl(ctx):
     transitive_sources = [dep[FortranInfo].transitive_sources for dep in ctx.attr.deps if FortranInfo in dep]
     transitive_modules = [dep[FortranInfo].transitive_modules for dep in ctx.attr.deps if FortranInfo in dep]
     transitive_objects = [dep[FortranInfo].transitive_objects for dep in ctx.attr.deps if FortranInfo in dep]
+    transitive_libraries = [dep[FortranInfo].transitive_libraries for dep in ctx.attr.deps if FortranInfo in dep]
     
     # Merge module maps from dependencies
     module_map = {}
@@ -46,20 +47,33 @@ def _fortran_library_impl(ctx):
     if objects:
         archive = ctx.actions.declare_file("lib{}.a".format(ctx.label.name))
         
+        # Use param file to avoid "Argument list too long" errors on Windows/Linux
+        # This is especially important for large libraries like LAPACK with thousands of object files
+        args = ctx.actions.args()
+        args.add("rcs")
+        args.add(archive.path)
+        
+        # Add each object file separately to ensure they are on separate lines in param file
+        # This avoids MSVC linker's 131071 character per line limit
+        for obj in objects:
+            args.add(obj)
+        
         args.use_param_file("@%s", use_always = True)
         args.set_param_file_format("multiline")
         
         ctx.actions.run(
             executable = toolchain.archiver,
-            arguments = ["rcs", archive.path] + [obj.path for obj in objects],
+            arguments = [args],
             inputs = objects,
             outputs = [archive],
             mnemonic = "FortranArchive",
             progress_message = "Creating Fortran archive {}".format(archive.short_path),
         )
         output_files = [archive] + modules
+        libraries = [archive]
     else:
         output_files = modules
+        libraries = []
     
     return [
         DefaultInfo(files = depset(output_files)),
@@ -75,6 +89,10 @@ def _fortran_library_impl(ctx):
             transitive_objects = depset(
                 direct = objects,
                 transitive = transitive_objects,
+            ),
+            transitive_libraries = depset(
+                direct = libraries,
+                transitive = transitive_libraries,
             ),
             module_map = module_map,
             compile_flags = ctx.attr.copts,
