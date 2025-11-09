@@ -9,7 +9,7 @@ This file defines Fortran library targets for LAPACK organized by precision:
   :lapack - All precision routines (main target)
 
 Usage in your BUILD file:
-  deps = ["@lapack//:lapack"]  # All precisions
+  deps = ["@lapack"]  # All precisions
   deps = ["@lapack//:double"]  # Only double precision
 """
 

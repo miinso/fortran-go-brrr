@@ -47,7 +47,7 @@ http_archive(
     # strip_prefix = "BLAS-3.12.0",
     url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
     sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
-    strip_prefix = "lapack-3.12.1",
+    strip_prefix = "lapack-3.12.1/BLAS",
     build_file = "//examples/refblas:blas.BUILD",
 )
 
@@ -58,4 +58,13 @@ http_archive(
     sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
     strip_prefix = "lapack-3.12.1",
     build_file = "//examples/lapack:lapack.BUILD",
+)
+
+# LAPACKE - C interface to LAPACK (for examples)
+http_archive(
+    name = "lapacke",
+    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
+    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
+    strip_prefix = "lapack-3.12.1/LAPACKE",
+    build_file = "//examples/lapack:lapacke.BUILD",
 )
