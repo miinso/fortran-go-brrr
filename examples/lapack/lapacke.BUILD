@@ -41,8 +41,14 @@ genrule(
     srcs = ["include/lapacke_mangling_with_flags.h.in"],
     outs = ["include/lapacke_mangling.h"],
     cmd = """
-        # Set ADD_ define for standard Unix/Linux Fortran compiler convention
-        sed 's|^#ifndef LAPACK_HEADER_INCLUDED|#ifndef LAPACK_HEADER_INCLUDED\\n#define ADD_|' $< > $@
+        awk '
+            NR==1 && /^#ifndef LAPACK_HEADER_INCLUDED/ {
+                print
+                print "#define ADD_"
+                next
+            }
+            { print }
+        ' $(location include/lapacke_mangling_with_flags.h.in) > $@
     """,
 )
 
