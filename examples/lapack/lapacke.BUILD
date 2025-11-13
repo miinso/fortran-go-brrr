@@ -38,20 +38,12 @@ package(default_visibility = ["//visibility:public"])
 
 # Generate lapacke_mangling.h from template
 # Uses ADD_ convention (lowercase with underscore) for Fortran name mangling
+# Note: ADD_ is defined via cc_library defines attribute, not in the header
 genrule(
     name = "generate_mangling_h",
     srcs = ["include/lapacke_mangling_with_flags.h.in"],
     outs = ["include/lapacke_mangling.h"],
-    cmd = """
-        awk '
-            NR==1 && /^#ifndef LAPACK_HEADER_INCLUDED/ {
-                print
-                print "#define ADD_"
-                next
-            }
-            { print }
-        ' $(location include/lapacke_mangling_with_flags.h.in) > $@
-    """,
+    cmd = "cp $(location include/lapacke_mangling_with_flags.h.in) $@",
 )
 
 # Header files
