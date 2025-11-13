@@ -9,6 +9,7 @@ module(
 # Dependencies
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
 bazel_dep(name = "platforms", version = "0.0.8")
+bazel_dep(name = "rules_cc", version = "0.0.9")
 
 # Configure LLVM/Flang toolchain
 llvm_flang = use_extension("//fortran:extensions.bzl", "llvm_flang")
@@ -67,4 +68,6 @@ http_archive(
     sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
     strip_prefix = "lapack-3.12.1/LAPACKE",
     build_file = "//examples/lapack:lapacke.BUILD",
+    patches = ["//examples/lapack:pr-1164-msvc-complex.patch"],  # discard once they rollout #1164
+    patch_args = ["-p2"],  # strip 2 levels: lapack-3.12.1/LAPACKE/
 )
