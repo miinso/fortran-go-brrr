@@ -2,6 +2,7 @@
 
 load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
 load(":compile.bzl", "compile_fortran")
+load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain")
 
 def _fortran_library_impl(ctx):
     toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
@@ -75,6 +76,43 @@ def _fortran_library_impl(ctx):
         output_files = modules
         libraries = []
     
+    # Create CcInfo provider for C/C++ interoperability
+    # See: https://bazel.build/versions/8.4.0/configure/integrate-cpp
+    cc_info_providers = []
+    if libraries:
+        # Get CC toolchain for creating CcInfo
+        cc_toolchain = find_cc_toolchain(ctx)
+        feature_configuration = cc_common.configure_features(
+            ctx = ctx,
+            cc_toolchain = cc_toolchain,
+        )
+
+        # Create a library to link for C/C++ consumers
+        library_to_link = cc_common.create_library_to_link(
+            actions = ctx.actions,
+            feature_configuration = feature_configuration,
+            static_library = archive,
+        )
+
+        # Create a linker input
+        linker_input = cc_common.create_linker_input(
+            owner = ctx.label,
+            libraries = depset([library_to_link]),
+        )
+
+        # Create linking context
+        linking_context = cc_common.create_linking_context(
+            linker_inputs = depset([linker_input]),
+        )
+
+        # Create CcInfo
+        cc_info_providers.append(
+            CcInfo(
+                compilation_context = cc_common.create_compilation_context(),
+                linking_context = linking_context,
+            )
+        )
+
     return [
         DefaultInfo(files = depset(output_files)),
         FortranInfo(
@@ -99,7 +137,7 @@ def _fortran_library_impl(ctx):
             compile_flags = ctx.attr.copts,
             link_flags = ctx.attr.linkopts,
         ),
-    ]
+    ] + cc_info_providers
 
 fortran_library = rule(
     implementation = _fortran_library_impl,
@@ -138,6 +176,14 @@ fortran_library = rule(
         "includes": attr.string_list(
             doc = "List of include directories to add to the compile line.",
         ),
+        # https://bazel.build/versions/8.4.0/configure/integrate-cpp
+        "_cc_toolchain": attr.label(
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+        ),
     },
-    toolchains = ["@rules_fortran//fortran:toolchain_type"],
+    toolchains = [
+        "@rules_fortran//fortran:toolchain_type",
+        "@bazel_tools//tools/cpp:toolchain_type", # to create CcInfo (not just reading it like in fortran_binary)
+    ],
+    fragments = ["cpp"], # `cc_common.configure_features()` requires this fragment thing
 )
