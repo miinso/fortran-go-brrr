@@ -15,3 +15,15 @@ fortran_test(
     srcs = ["fortran_calls_c.f90"],
     deps = [":c_math"],
 )
+
+# C calls Fortran
+fortran_library(
+    name = "fortran_math",
+    srcs = ["fortran_math.f90"],
+)
+
+cc_test(
+    name = "c_calls_fortran",
+    srcs = ["c_calls_fortran.c"],
+    deps = [":fortran_math"],
+)
