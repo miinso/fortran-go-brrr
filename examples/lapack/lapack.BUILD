@@ -2115,6 +2115,7 @@ fortran_library(
         ":sclaux",
         ":no_opt_single",
         ":dslasrc",
+        "@blas//:single",
     ],
 )
 
@@ -2126,6 +2127,7 @@ fortran_library(
         ":dzlaux",
         ":no_opt_double",
         ":dslasrc",
+        "@blas//:double",
     ],
 )
 
@@ -2137,6 +2139,7 @@ fortran_library(
         ":sclaux",
         ":no_opt_complex",
         ":zclasrc",
+        "@blas//:complex",
     ],
 )
 
@@ -2148,6 +2151,7 @@ fortran_library(
         ":dzlaux",
         ":no_opt_complex16",
         ":zclasrc",
+        "@blas//:complex16",
     ],
 )
 
@@ -2159,6 +2163,5 @@ fortran_library(
         ":double",
         ":complex",
         ":complex16",
-        "@blas//:blas",  # LAPACK requires BLAS
     ],
 )
