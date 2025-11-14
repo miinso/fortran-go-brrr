@@ -6,16 +6,39 @@ load(":compile.bzl", "compile_fortran")
 def _fortran_test_impl(ctx):
     toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
 
-    # Collect dependencies
+    # Collect dependencies from both Fortran and C/C++ libraries
     transitive_objects = []
     module_map = {}
     link_flags = []
-    
+    cc_libraries = []
+    cc_objects = []
+
     for dep in ctx.attr.deps:
+        # Handle Fortran dependencies
         if FortranInfo in dep:
             transitive_objects.append(dep[FortranInfo].transitive_objects)
             module_map.update(dep[FortranInfo].module_map)
             link_flags.extend(dep[FortranInfo].link_flags)
+
+        # Handle C/C++ dependencies
+        if CcInfo in dep:
+            linking_context = dep[CcInfo].linking_context
+            for linker_input in linking_context.linker_inputs.to_list():
+                # Collect libraries
+                for library in linker_input.libraries:
+                    # Prefer PIC static library, fall back to non-PIC
+                    if library.pic_static_library != None:
+                        cc_libraries.append(library.pic_static_library)
+                    elif library.static_library != None:
+                        cc_libraries.append(library.static_library)
+
+                    # Collect object files
+                    if hasattr(library, "objects") and library.objects != None:
+                        cc_objects.extend(library.objects)
+
+                # Collect user link flags
+                if hasattr(linker_input, "user_link_flags"):
+                    link_flags.extend(linker_input.user_link_flags)
     
     # Compile sources
     objects = []
@@ -30,17 +53,26 @@ def _fortran_test_impl(ctx):
         )
         objects.append(result.object)
     
-    # Collect all objects
-    all_objects = depset(
+    # Collect all objects from Fortran dependencies
+    fortran_objects = depset(
         direct = objects,
         transitive = transitive_objects,
     ).to_list()
-    
+
+    # Combine all objects and libraries (Fortran + C/C++)
+    all_objects = fortran_objects + cc_objects
+    all_libraries = cc_libraries
+
     # Link test executable
     executable = ctx.actions.declare_file(ctx.label.name)
-    
+
     args = ctx.actions.args()
     args.add_all(all_objects)
+
+    # Add C/C++ libraries
+    for lib in all_libraries:
+        args.add(lib)
+
     args.add("-o", executable.path)
     args.add_all(toolchain.linker_flags)
     args.add_all(link_flags)
@@ -50,7 +82,7 @@ def _fortran_test_impl(ctx):
         executable = toolchain.linker,
         arguments = [args],
         inputs = depset(
-            direct = all_objects,
+            direct = all_objects + all_libraries,
             transitive = [toolchain.all_files],
         ),
         outputs = [executable],
@@ -92,8 +124,8 @@ fortran_test = rule(
             doc = "List of Fortran test source files.",
         ),
         "deps": attr.label_list(
-            providers = [FortranInfo],
-            doc = "List of fortran_library targets to link against.",
+            providers = [[FortranInfo], [CcInfo]],
+            doc = "List of fortran_library or cc_library targets to link against.",
         ),
         "copts": attr.string_list(
             doc = "Additional compiler options.",
