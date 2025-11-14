@@ -93,6 +93,7 @@ def _fortran_library_impl(ctx):
             transitive_libraries = depset(
                 direct = libraries,
                 transitive = transitive_libraries,
+                order = "topological",
             ),
             module_map = module_map,
             compile_flags = ctx.attr.copts,

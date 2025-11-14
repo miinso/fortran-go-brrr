@@ -30,9 +30,12 @@ def _fortran_binary_impl(ctx):
         )
         objects.append(result.object)
     
-    # Collect all libraries from dependencies
+    # Collect all libraries from dependencies in topological order
+    # (dependencies come after dependents, allowing linker to resolve symbols correctly)
+    # See: https://bazel.build/extending/depsets#order
     all_libraries = depset(
         transitive = transitive_libraries,
+        order = "topological",
     ).to_list()
     
     # Link executable
@@ -44,25 +47,13 @@ def _fortran_binary_impl(ctx):
     for obj in objects:
         args.add(obj)
     
-    # On Unix-like systems, the linker processes libraries in order and only extracts
-    # symbols that are currently needed. This can cause issues with circular dependencies
-    # or when a library A depends on library B, but B comes first in the link order.
-    #
-    # Solutions:
-    # 1. Use -Wl,--start-group ... -Wl,--end-group (Linux) or -Wl,-(  -Wl,-) (BSD)
-    # 2. Specify libraries in correct dependency order (trickier to compute?)
-    # 3. Specify libraries twice (simpler?)
-    #
-    # let's try #3: list all libraries twice
-    # TODO: see how rules_cc people handled this one
-    
-    # First pass: Add all library files
+    # Add libraries in topological order with deduplication
+    # rules_cc did use a set to dedup libraries
+    seen_libraries = {}
     for lib in all_libraries:
-        args.add(lib)
-    
-    # Second pass: Add them again to resolve circular/reverse dependencies
-    for lib in all_libraries:
-        args.add(lib)
+        if lib not in seen_libraries:
+            args.add(lib)
+            seen_libraries[lib] = True
     
     args.add("-o", executable.path)
     args.add_all(toolchain.linker_flags)
