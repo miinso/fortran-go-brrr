@@ -1,0 +1,41 @@
+# bidirectional interop between C and Fortran code
+
+load("//:defs.bzl", "fortran_library", "fortran_test")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+# Fortran calls C
+cc_library(
+    name = "c_math",
+    srcs = ["c_math.c"],
+    hdrs = ["c_math.h"],
+)
+
+fortran_test(
+    name = "fortran_calls_c",
+    srcs = ["fortran_calls_c.f90"],
+    deps = [":c_math"],
+)
+
+# C calls Fortran
+fortran_library(
+    name = "fortran_math",
+    srcs = ["fortran_math.f90"],
+)
+
+cc_test(
+    name = "c_calls_fortran",
+    srcs = ["c_calls_fortran.c"],
+    deps = [":fortran_math"],
+)
+
+# C calls Fortran (+ runtime library support)
+fortran_library(
+    name = "fortran_runtime_features",
+    srcs = ["fortran_runtime_features.f90"],
+)
+
+cc_test(
+    name = "c_calls_fortran_runtime",
+    srcs = ["c_calls_fortran_runtime.c"],
+    deps = [":fortran_runtime_features"],
+)

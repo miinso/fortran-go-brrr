@@ -6,19 +6,43 @@ load(":compile.bzl", "compile_fortran")
 def _fortran_binary_impl(ctx):
     toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
 
-    # Collect dependencies
+    # Collect dependencies from both Fortran and C/C++ libraries
     transitive_libraries = []
     module_map = {}
     link_flags = []
+    cc_libraries = []
+    cc_objects = []
 
     for dep in ctx.attr.deps:
+        # Handle Fortran dependencies
         if FortranInfo in dep:
             transitive_libraries.append(dep[FortranInfo].transitive_libraries)
             module_map.update(dep[FortranInfo].module_map)
             link_flags.extend(dep[FortranInfo].link_flags)
 
+        # Handle C/C++ dependencies
+        if CcInfo in dep:
+            linking_context = dep[CcInfo].linking_context
+            for linker_input in linking_context.linker_inputs.to_list():
+                # Collect libraries
+                for library in linker_input.libraries:
+                    # Prefer PIC static library, fall back to non-PIC
+                    if library.pic_static_library != None:
+                        cc_libraries.append(library.pic_static_library)
+                    elif library.static_library != None:
+                        cc_libraries.append(library.static_library)
+                    # TODO(minseo): Handle dynamic libraries
+
+                    # Collect object files
+                    if hasattr(library, "objects") and library.objects != None:
+                        cc_objects.extend(library.objects)
+
+                # Collect user link flags
+                if hasattr(linker_input, "user_link_flags"):
+                    link_flags.extend(linker_input.user_link_flags)
+
     # Compile sources
-    objects = []
+    fortran_objects = []
     for src in ctx.files.srcs:
         result = compile_fortran(
             ctx = ctx,
@@ -28,25 +52,31 @@ def _fortran_binary_impl(ctx):
             copts = ctx.attr.copts,
             defines = ctx.attr.defines,
         )
-        objects.append(result.object)
+        fortran_objects.append(result.object)
     
     # Collect all libraries from dependencies in topological order
     # (dependencies come after dependents, allowing linker to resolve symbols correctly)
     # See: https://bazel.build/extending/depsets#order
-    all_libraries = depset(
+    fortran_libraries = depset(
         transitive = transitive_libraries,
         order = "topological",
     ).to_list()
-    
+
+    # Combine Fortran and C/C++ libraries
+    all_libraries = fortran_libraries + cc_libraries
+
+    # Combine all object files (Fortran + C/C++)
+    all_objects = fortran_objects + cc_objects
+
     # Link executable
     executable = ctx.actions.declare_file(ctx.label.name)
-    
+
     args = ctx.actions.args()
-    
-    # Add local object files first
-    for obj in objects:
+
+    # Add all object files first (both Fortran and C/C++)
+    for obj in all_objects:
         args.add(obj)
-    
+
     # Add libraries in topological order with deduplication
     # rules_cc did use a set to dedup libraries
     seen_libraries = {}
@@ -68,7 +98,7 @@ def _fortran_binary_impl(ctx):
         executable = toolchain.linker,
         arguments = [args],
         inputs = depset(
-            direct = objects + all_libraries,
+            direct = all_objects + all_libraries,
             transitive = [toolchain.all_files],
         ),
         outputs = [executable],
@@ -105,8 +135,8 @@ fortran_binary = rule(
             doc = "List of Fortran source files to compile.",
         ),
         "deps": attr.label_list(
-            providers = [FortranInfo],
-            doc = "List of fortran_library targets to link against.",
+            providers = [[FortranInfo], [CcInfo]],
+            doc = "List of fortran_library or cc_library targets to link against.",
         ),
         "copts": attr.string_list(
             doc = "Additional compiler options.",
