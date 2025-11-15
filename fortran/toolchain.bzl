@@ -3,6 +3,11 @@
 load("//fortran/private:providers.bzl", "FortranToolchainInfo")
 
 def _fortran_toolchain_impl(ctx):
+    # Collect runtime library files from dependencies
+    runtime_lib_files = []
+    for dep in ctx.attr.runtime_libraries:
+        runtime_lib_files.extend(dep[DefaultInfo].files.to_list())
+
     toolchain_info = FortranToolchainInfo(
         compiler = ctx.file.compiler,
         linker = ctx.file.linker,
@@ -13,6 +18,7 @@ def _fortran_toolchain_impl(ctx):
         preprocessor_flags = ctx.attr.preprocessor_flags,
         supports_module_path = ctx.attr.supports_module_path,
         module_flag_format = ctx.attr.module_flag_format,
+        runtime_libraries = runtime_lib_files,
         all_files = depset(
             direct = [
                 ctx.file.compiler,
@@ -96,6 +102,10 @@ fortran_toolchain = rule(
         "tool_deps": attr.label_list(
             allow_files = True,
             doc = "Additional tool dependencies (e.g., runtime libraries).",
+        ),
+        "runtime_libraries": attr.label_list(
+            default = [],
+            doc = "flang/clang runtime libraries (flang_rt, clang_rt) for C/Fortran interop.",
         ),
     },
 )

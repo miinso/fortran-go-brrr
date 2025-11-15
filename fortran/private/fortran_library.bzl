@@ -94,10 +94,15 @@ def _fortran_library_impl(ctx):
             static_library = archive,
         )
 
-        # Create a linker input
+        # Get Fortran toolchain to access runtime libraries
+        fortran_toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
+
+        # Create a linker input with Fortran runtime libraries
         linker_input = cc_common.create_linker_input(
             owner = ctx.label,
             libraries = depset([library_to_link]),
+            user_link_flags = depset([lib.path for lib in fortran_toolchain.runtime_libraries]), # here are the paths to link
+            additional_inputs = depset(fortran_toolchain.runtime_libraries), # bazel to know where the actual files are
         )
 
         # Create linking context
