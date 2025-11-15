@@ -27,3 +27,15 @@ cc_test(
     srcs = ["c_calls_fortran.c"],
     deps = [":fortran_math"],
 )
+
+# C calls Fortran (+ runtime library support)
+fortran_library(
+    name = "fortran_runtime_features",
+    srcs = ["fortran_runtime_features.f90"],
+)
+
+cc_test(
+    name = "c_calls_fortran_runtime",
+    srcs = ["c_calls_fortran_runtime.c"],
+    deps = [":fortran_runtime_features"],
+)
