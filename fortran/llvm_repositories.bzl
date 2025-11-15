@@ -80,17 +80,23 @@ filegroup(
 
 # flang/clang runtime libraries needed for linking Fortran code
 # these are required when C/C++ code calls Fortran functions that depend on runtime lib routines
-# TODO: use `select()` directive to pick up things
 filegroup(
     name = "runtime_libraries",
-    srcs = glob([
-        # flang runtime
-        "lib/clang/*/lib/*/flang_rt.runtime.static.lib",    # win
-        "lib/clang/*/lib/*/libflang_rt.runtime.a",          # unix-like
-        # clang compiler builtins
-        "lib/clang/*/lib/*/clang_rt.builtins-*.lib",        # win
-        "lib/clang/*/lib/*/libclang_rt.builtins.a",         # unix-like
-    ]),
+    srcs = select({
+        "@platforms//os:windows": glob([
+            "lib/clang/*/lib/*/flang_rt.runtime.static.lib", # TODO: what about /MD /MTd /MDd
+            "lib/clang/*/lib/*/clang_rt.builtins-*.lib", # [x86_64, aarch64]
+        ]),
+        "@platforms//os:macos": glob([
+            "lib/clang/*/lib/*/libflang_rt.runtime.a",
+            "lib/clang/*/lib/*/libclang_rt.osx.a",
+        ]),
+        "@platforms//os:linux": glob([
+            "lib/clang/*/lib/*/libflang_rt.runtime.a",
+            "lib/clang/*/lib/*/libclang_rt.builtins.a",
+        ]),
+        "//conditions:default": [],
+    }),
 )
 
 # Export binaries for toolchain use
