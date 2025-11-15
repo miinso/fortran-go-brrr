@@ -22,7 +22,7 @@ def _get_platform_info(repository_ctx):
             # TODO: suppress normal (ubuntu-latest) build and use the musl static build as default
             # return "x86_64-unknown-linux-gnu", "linux", normalized_arch
             return "x86_64-unknown-linux-gnu-static", "linux", normalized_arch
-        elif normalized_arch == "arm64":
+        elif normalized_arch == "arm64": # TODO: not implemented
             return "aarch64-linux-gnu", "linux", normalized_arch
     elif "mac" in os_name or "darwin" in os_name:
         if normalized_arch == "x86_64":
@@ -76,6 +76,21 @@ filegroup(
 filegroup(
     name = "all_files",
     srcs = glob(["**/*"]),
+)
+
+# flang/clang runtime libraries needed for linking Fortran code
+# these are required when C/C++ code calls Fortran functions that depend on runtime lib routines
+# TODO: use `select()` directive to pick up things
+filegroup(
+    name = "runtime_libraries",
+    srcs = glob([
+        # flang runtime
+        "lib/clang/*/lib/*/flang_rt.runtime.static.lib",    # win
+        "lib/clang/*/lib/*/libflang_rt.runtime.a",          # unix-like
+        # clang compiler builtins
+        "lib/clang/*/lib/*/clang_rt.builtins-*.lib",        # win
+        "lib/clang/*/lib/*/libclang_rt.builtins.a",         # unix-like
+    ]),
 )
 
 # Export binaries for toolchain use

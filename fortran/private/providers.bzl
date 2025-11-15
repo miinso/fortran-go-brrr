@@ -29,6 +29,7 @@ FortranToolchainInfo = provider(
         "preprocessor_flags": "Default preprocessor flags (e.g., ['-D_OPENMP'])",
         "supports_module_path": "Whether compiler supports -J flag for modules",
         "module_flag_format": "Format string for module path flag (e.g., '-J{}', '-module {}')",
+        "runtime_libraries": "flang/clang runtime libraries needed for C/Fortran interop",
         "all_files": "All toolchain files",
     },
 )
