@@ -7,9 +7,10 @@ module(
 )
 
 # Dependencies
-bazel_dep(name = "bazel_skylib", version = "1.5.0")
-bazel_dep(name = "platforms", version = "0.0.8")
-bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.4")
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # Configure LLVM/Flang toolchain
 llvm_flang = use_extension("//fortran:extensions.bzl", "llvm_flang")
@@ -17,7 +18,6 @@ llvm_flang.prebuilt(
     version = "v21.1.3",
     repo_owner = "miinso",
     repo_name = "flang",
-    local_dist_dir = "dist",  # Use local files from dist/ folder during development
 )
 use_repo(
     llvm_flang,
@@ -39,13 +39,8 @@ register_toolchains(
 )
 
 # Netlib BLAS (for examples)
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 http_archive(
     name = "blas",
-    # url = "https://www.netlib.org/blas/blas-3.12.0.tgz",
-    # sha256 = "ccc41b5d088e50db0030317ae9b0c9af375710c1392acad1fe209602da5a5aad",
-    # strip_prefix = "BLAS-3.12.0",
     url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
     sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
     strip_prefix = "lapack-3.12.1/BLAS",
