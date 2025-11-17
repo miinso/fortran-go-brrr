@@ -1,28 +1,47 @@
-"""Implementation of fortran_library rule."""
+"""Compiles Fortran sources into a static library.
+
+NOTE: Fortran sources that define a MODULE produce `*.mod` files (interface metadata).
+Sources that USE a module need the corresponding `*.mod` file to compile.
+
+This rule:
+  - Compiles Fortran sources to `*.o` (always) + `*.mod` (only if MODULE defined)
+  - Archives `*.o` into `*.a`
+  - Provides `*.mod` directories to dependents via FortranInfo
+  - Provides CcInfo with `*.a` + runtime library paths for C/C++ interop
+"""
 
 load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
 load(":compile.bzl", "compile_fortran")
 load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain")
 
 def _fortran_library_impl(ctx):
+    """Implementation function for fortran_library rule.
+
+    Input: ctx.files.srcs (Fortran sources), ctx.attr.deps (fortran_library deps)
+    Output: DefaultInfo (`*.a` + `*.mod`), FortranInfo, CcInfo
+    """
     toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
 
-    # Collect transitive dependencies
+    # Collect transitive deps for linking and compiling dependent sources
     transitive_sources = [dep[FortranInfo].transitive_sources for dep in ctx.attr.deps if FortranInfo in dep]
     transitive_modules = [dep[FortranInfo].transitive_modules for dep in ctx.attr.deps if FortranInfo in dep]
     transitive_objects = [dep[FortranInfo].transitive_objects for dep in ctx.attr.deps if FortranInfo in dep]
     transitive_libraries = [dep[FortranInfo].transitive_libraries for dep in ctx.attr.deps if FortranInfo in dep]
-    
-    # Merge module maps from dependencies
+
+    # module_map: {source_basename: directory_with_mod_files}
+    # allows querying module files (if any) by source filename
+    # sources that USE modules need access to those `*.mod` files at compile time
     module_map = {}
     for dep in ctx.attr.deps:
         if FortranInfo in dep:
             module_map.update(dep[FortranInfo].module_map)
-    
+
+    # Compile each source: `*.f90` -> `*.o` (always) + `*.mod` (if source defines a MODULE)
+    # https://fortran-lang.org/learn/building_programs/include_files/#include-files-and-modules
     objects = [] # `*.o` files for archiving
     modules = [] # `*.mod` directories for dependents
     local_module_map = {}
-    
+
     for src in ctx.files.srcs:
         result = compile_fortran(
             ctx = ctx,
@@ -39,28 +58,24 @@ def _fortran_library_impl(ctx):
             # The directory may contain 0 or more .mod files
             src_key = src.basename.replace(".", "_")
             local_module_map[src_key] = result.module
-    
-    # Update module map
+
     module_map.update(local_module_map)
     
-    # Create static library if there are objects
+    # Archive compiled objects into static library (`*.a` file)
+    archive = None
     if objects:
         archive = ctx.actions.declare_file("lib{}.a".format(ctx.label.name))
-        
+
         # wrap (possibly long) arguments into a file
         # https://bazel.build/rules/lib/builtins/Args#use_param_file
         args = ctx.actions.args()
         args.add("rcs")
         args.add(archive.path)
-        
-        # Add each object file separately to ensure they are on separate lines in param file
-        # This avoids MSVC linker's 131071 character per line limit
         for obj in objects:
             args.add(obj)
-        
         args.use_param_file("@%s", use_always = True)
         args.set_param_file_format("multiline")
-        
+
         ctx.actions.run(
             executable = toolchain.archiver,
             arguments = [args],
@@ -97,7 +112,7 @@ def _fortran_library_impl(ctx):
             additional_inputs = depset(toolchain.runtime_libraries), # bazel to know where the actual files are
         )
         linking_context = cc_common.create_linking_context(linker_inputs = depset([linker_input]))
-
+    
     # Merge this library's CcInfo with transitive dependencies' CcInfos (if any)
     if cc_infos:
         if linking_context:
@@ -139,17 +154,23 @@ def _fortran_library_impl(ctx):
 fortran_library = rule(
     implementation = _fortran_library_impl,
     doc = """Compiles Fortran sources into a static library.
-    
-    This rule compiles Fortran source files and creates a static library.
-    It handles module dependencies automatically and provides FortranInfo
-    to dependent targets.
-    
-    Example:
+
+    Examples:
         fortran_library(
-            name = "mylib",
+            name = "math",
             srcs = ["module.f90", "utils.f90"],
-            deps = [":otherlib"],
+        )
+
+        fortran_library(
+            name = "advanced",
+            srcs = ["solver.f90"],
+            deps = [":math"],
             copts = ["-O2"],
+        )
+
+        fortran_library(
+            name = "all",
+            deps = [":math", ":advanced"],
         )
     """,
     attrs = {
