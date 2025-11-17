@@ -90,7 +90,13 @@ def _fortran_test_impl(ctx):
 
     args.add("-o", executable.path)
     args.add_all(toolchain.linker_flags)
-    args.add_all(link_flags)
+
+    # Deduplicate link flags from CcInfo.user_link_flags
+    seen_flags = {}
+    for flag in link_flags:
+        if flag not in seen_flags:
+            args.add(flag)
+            seen_flags[flag] = True
     args.add_all(ctx.attr.linkopts)
 
     # Use param file to avoid "Argument list too long" errors on Windows/Linux
