@@ -19,9 +19,8 @@ def _fortran_library_impl(ctx):
         if FortranInfo in dep:
             module_map.update(dep[FortranInfo].module_map)
     
-    # Compile sources
-    objects = []
-    modules = []
+    objects = [] # `*.o` files for archiving
+    modules = [] # `*.mod` directories for dependents
     local_module_map = {}
     
     for src in ctx.files.srcs:
@@ -29,7 +28,7 @@ def _fortran_library_impl(ctx):
             ctx = ctx,
             toolchain = toolchain,
             src = src,
-            module_map = module_map,
+            module_map = module_map,  # propagate child dependency `*.mod` files (if any)
             copts = ctx.attr.copts,
             defines = ctx.attr.defines,
         )
@@ -48,8 +47,8 @@ def _fortran_library_impl(ctx):
     if objects:
         archive = ctx.actions.declare_file("lib{}.a".format(ctx.label.name))
         
-        # Use param file to avoid "Argument list too long" errors on Windows/Linux
-        # This is especially important for large libraries like LAPACK with thousands of object files
+        # wrap (possibly long) arguments into a file
+        # https://bazel.build/rules/lib/builtins/Args#use_param_file
         args = ctx.actions.args()
         args.add("rcs")
         args.add(archive.path)
@@ -70,53 +69,42 @@ def _fortran_library_impl(ctx):
             mnemonic = "FortranArchive",
             progress_message = "Creating Fortran archive {}".format(archive.short_path),
         )
-        output_files = [archive] + modules
-        libraries = [archive]
-    else:
-        output_files = modules
-        libraries = []
-    
-    # Create CcInfo provider for C/C++ interoperability
-    # See: https://bazel.build/versions/8.4.0/configure/integrate-cpp
-    cc_info_providers = []
-    if libraries:
-        # Get CC toolchain for creating CcInfo
-        cc_toolchain = find_cc_toolchain(ctx)
-        feature_configuration = cc_common.configure_features(
-            ctx = ctx,
-            cc_toolchain = cc_toolchain,
-        )
 
-        # Create a library to link for C/C++ consumers
-        library_to_link = cc_common.create_library_to_link(
+    # DefaultInfo: just a list of files built when building this target (`*.a` + `*.mod` directories)
+    output_files = ([archive] + modules) if archive else modules
+
+    # FortranInfo.transitive_libraries: direct `*.a` for this target, propagated from child dependencies
+    libraries = [archive] if archive else []
+
+    # CcInfo: Allows C/C++ rules (cc_binary, cc_library) to link against this Fortran library
+    cc_infos = [dep[CcInfo] for dep in ctx.attr.deps if CcInfo in dep]
+    
+    compilation_context = cc_common.create_compilation_context()
+    linking_context = None
+    
+    if archive:
+        cc_toolchain = find_cc_toolchain(ctx)
+        lib_to_link = cc_common.create_library_to_link(
             actions = ctx.actions,
-            feature_configuration = feature_configuration,
+            feature_configuration = cc_common.configure_features(ctx = ctx, cc_toolchain = cc_toolchain),
             static_library = archive,
         )
-
-        # Get Fortran toolchain to access runtime libraries
-        fortran_toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
-
-        # Create a linker input with Fortran runtime libraries
         linker_input = cc_common.create_linker_input(
             owner = ctx.label,
-            libraries = depset([library_to_link]),
-            user_link_flags = depset([lib.path for lib in fortran_toolchain.runtime_libraries]), # here are the paths to link
-            additional_inputs = depset(fortran_toolchain.runtime_libraries), # bazel to know where the actual files are
+            libraries = depset([lib_to_link]),
+            # provide runtime libs by default
+            user_link_flags = depset([lib.path for lib in toolchain.runtime_libraries]), # here are the paths to link
+            additional_inputs = depset(toolchain.runtime_libraries), # bazel to know where the actual files are
         )
+        linking_context = cc_common.create_linking_context(linker_inputs = depset([linker_input]))
 
-        # Create linking context
-        linking_context = cc_common.create_linking_context(
-            linker_inputs = depset([linker_input]),
-        )
-
-        # Create CcInfo
-        cc_info_providers.append(
-            CcInfo(
-                compilation_context = cc_common.create_compilation_context(),
-                linking_context = linking_context,
-            )
-        )
+    # Merge this library's CcInfo with transitive dependencies' CcInfos (if any)
+    if cc_infos:
+        if linking_context:
+            cc_infos = [CcInfo(compilation_context = compilation_context, linking_context = linking_context)] + cc_infos
+        merged_cc_info = cc_common.merge_cc_infos(cc_infos = cc_infos)
+        compilation_context = merged_cc_info.compilation_context
+        linking_context = merged_cc_info.linking_context
 
     return [
         DefaultInfo(files = depset(output_files)),
@@ -142,7 +130,11 @@ def _fortran_library_impl(ctx):
             compile_flags = ctx.attr.copts,
             link_flags = ctx.attr.linkopts,
         ),
-    ] + cc_info_providers
+        CcInfo(
+            compilation_context = compilation_context,
+            linking_context = linking_context,
+        ),
+    ]
 
 fortran_library = rule(
     implementation = _fortran_library_impl,
