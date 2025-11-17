@@ -1,6 +1,6 @@
 """Bzlmod extensions for rules_fortran."""
 
-load("//fortran:llvm_repositories.bzl", "llvm_flang_prebuilt", "register_llvm_flang_toolchains")
+load("//fortran:llvm_repositories.bzl", "register_llvm_flang_toolchains")
 
 def _llvm_flang_impl(module_ctx):
     """Implementation of llvm_flang extension."""
@@ -15,7 +15,6 @@ def _llvm_flang_impl(module_ctx):
                 repo_name = prebuilt.repo_name,
                 url_template = prebuilt.url_template if prebuilt.url_template else None,
                 sha256 = prebuilt.sha256,
-                local_dist_dir = prebuilt.local_dist_dir if prebuilt.local_dist_dir else "",
                 register_all = True,
             )
 
@@ -43,9 +42,6 @@ _prebuilt = tag_class(
         "sha256": attr.string_dict(
             doc = "SHA256 checksums per platform",
         ),
-        "local_dist_dir": attr.string(
-            doc = "Local directory with prebuilt archives (for development)",
-        ),
     },
 )
 
@@ -63,7 +59,6 @@ llvm_flang = module_extension(
             version = "v21.1.3",
             repo_owner = "miinso",
             repo_name = "flang",
-            local_dist_dir = "dist",  # Optional: use local files for development
             sha256 = {...},
         )
 

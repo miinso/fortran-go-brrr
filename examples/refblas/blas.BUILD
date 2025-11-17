@@ -293,74 +293,80 @@ fortran_library(
 fortran_library(
     name = "single",
     srcs = SBLAS1_SRCS + SBLAS2_SRCS + SBLAS3_SRCS,
-    deps = [":aux"],
     copts = BLAS_COPTS,
     visibility = ["//visibility:public"],
+    deps = [":aux"],
 )
 
 fortran_library(
     name = "double",
     srcs = DBLAS1_SRCS + DBLAS2_SRCS + DBLAS3_SRCS,
-    deps = [":aux"],
     copts = BLAS_COPTS,
     visibility = ["//visibility:public"],
+    deps = [":aux"],
 )
 
 fortran_library(
     name = "complex",
     srcs = CBLAS1_SRCS + CBLAS2_SRCS + CBLAS3_SRCS,
-    deps = [":aux", ":single"],
     copts = BLAS_COPTS,
     visibility = ["//visibility:public"],
+    deps = [
+        ":aux",
+        ":single",
+    ],
 )
 
 fortran_library(
     name = "complex16",
     srcs = ZBLAS1_SRCS + ZBLAS2_SRCS + ZBLAS3_SRCS,
-    deps = [":aux", ":double"],
     copts = BLAS_COPTS,
     visibility = ["//visibility:public"],
+    deps = [
+        ":aux",
+        ":double",
+    ],
 )
 
 # Complete BLAS library with all precisions
 fortran_library(
     name = "blas",
+    visibility = ["//visibility:public"],
     deps = [
         ":single",
         ":double",
         ":complex",
         ":complex16",
     ],
-    visibility = ["//visibility:public"],
 )
 
 # Test binaries (Level 1)
 fortran_test(
     name = "sblat1",
+    size = "small",
     srcs = ["TESTING/sblat1.f"],
     deps = [":single"],
-    size = "small",
 )
 
 fortran_test(
     name = "dblat1",
+    size = "small",
     srcs = ["TESTING/dblat1.f"],
     deps = [":double"],
-    size = "small",
 )
 
 fortran_test(
     name = "cblat1",
+    size = "small",
     srcs = ["TESTING/cblat1.f"],
     deps = [":complex"],
-    size = "small",
 )
 
 fortran_test(
     name = "zblat1",
+    size = "small",
     srcs = ["TESTING/zblat1.f"],
     deps = [":complex16"],
-    size = "small",
 )
 
 # Test binaries (Level 2 - need input files)
@@ -368,29 +374,29 @@ fortran_test(
 fortran_binary(
     name = "sblat2",
     srcs = ["TESTING/sblat2.f"],
-    deps = [":single_core"],
     visibility = ["//visibility:public"],
+    deps = [":single_core"],
 )
 
 fortran_binary(
     name = "dblat2",
     srcs = ["TESTING/dblat2.f"],
-    deps = [":double_core"],
     visibility = ["//visibility:public"],
+    deps = [":double_core"],
 )
 
 fortran_binary(
     name = "cblat2",
     srcs = ["TESTING/cblat2.f"],
-    deps = [":complex_core"],
     visibility = ["//visibility:public"],
+    deps = [":complex_core"],
 )
 
 fortran_binary(
     name = "zblat2",
     srcs = ["TESTING/zblat2.f"],
-    deps = [":complex16_core"],
     visibility = ["//visibility:public"],
+    deps = [":complex16_core"],
 )
 
 # Test binaries (Level 3 - need input files)
@@ -398,28 +404,27 @@ fortran_binary(
 fortran_binary(
     name = "sblat3",
     srcs = ["TESTING/sblat3.f"],
-    deps = [":single_core"],
     visibility = ["//visibility:public"],
+    deps = [":single_core"],
 )
 
 fortran_binary(
     name = "dblat3",
     srcs = ["TESTING/dblat3.f"],
-    deps = [":double_core"],
     visibility = ["//visibility:public"],
+    deps = [":double_core"],
 )
 
 fortran_binary(
     name = "cblat3",
     srcs = ["TESTING/cblat3.f"],
-    deps = [":complex_core"],
     visibility = ["//visibility:public"],
+    deps = [":complex_core"],
 )
 
 fortran_binary(
     name = "zblat3",
     srcs = ["TESTING/zblat3.f"],
-    deps = [":complex16_core"],
     visibility = ["//visibility:public"],
+    deps = [":complex16_core"],
 )
-

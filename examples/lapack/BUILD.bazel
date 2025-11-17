@@ -1,7 +1,7 @@
-load("//:defs.bzl", "fortran_binary")
+load("//:defs.bzl", "fortran_binary", "fortran_test")
 
 # simple DGESV run
-fortran_binary(
+fortran_test(
     name = "main",
     srcs = ["main.f90"],
     copts = ["-O2"],
@@ -9,7 +9,7 @@ fortran_binary(
 )
 
 # Cholesky decomposition demo
-fortran_binary(
+fortran_test(
     name = "chol",
     srcs = ["chol.f90"],
     copts = ["-O2"],
@@ -17,12 +17,12 @@ fortran_binary(
 )
 
 # Selective compilation
-fortran_binary(
+fortran_test(
     name = "mixed",
     srcs = ["mixed.f90"],
     copts = ["-O2"],
     deps = [
-        "@lapack//:double",
         "@lapack//:single",
+        "@lapack//:double",
     ],
 )

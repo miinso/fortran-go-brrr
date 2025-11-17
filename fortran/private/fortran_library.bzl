@@ -10,9 +10,11 @@ This rule:
   - Provides CcInfo with `*.a` + runtime library paths for C/C++ interop
 """
 
-load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
-load(":compile.bzl", "compile_fortran")
 load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain")
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load(":compile.bzl", "compile_fortran")
+load(":providers.bzl", "FortranInfo")
 
 def _fortran_library_impl(ctx):
     """Implementation function for fortran_library rule.
@@ -38,8 +40,8 @@ def _fortran_library_impl(ctx):
 
     # Compile each source: `*.f90` -> `*.o` (always) + `*.mod` (if source defines a MODULE)
     # https://fortran-lang.org/learn/building_programs/include_files/#include-files-and-modules
-    objects = [] # `*.o` files for archiving
-    modules = [] # `*.mod` directories for dependents
+    objects = []  # `*.o` files for archiving
+    modules = []  # `*.mod` directories for dependents
     local_module_map = {}
 
     for src in ctx.files.srcs:
@@ -54,13 +56,14 @@ def _fortran_library_impl(ctx):
         objects.append(result.object)
         if result.module:
             modules.append(result.module)
+
             # Use source basename as key for the module directory
             # The directory may contain 0 or more .mod files
             src_key = src.basename.replace(".", "_")
             local_module_map[src_key] = result.module
 
     module_map.update(local_module_map)
-    
+
     # Archive compiled objects into static library (`*.a` file)
     archive = None
     if objects:
@@ -93,10 +96,10 @@ def _fortran_library_impl(ctx):
 
     # CcInfo: Allows C/C++ rules (cc_binary, cc_library) to link against this Fortran library
     cc_infos = [dep[CcInfo] for dep in ctx.attr.deps if CcInfo in dep]
-    
+
     compilation_context = cc_common.create_compilation_context()
     linking_context = None
-    
+
     if archive:
         cc_toolchain = find_cc_toolchain(ctx)
         lib_to_link = cc_common.create_library_to_link(
@@ -108,11 +111,11 @@ def _fortran_library_impl(ctx):
             owner = ctx.label,
             libraries = depset([lib_to_link]),
             # provide runtime libs by default
-            user_link_flags = depset([lib.path for lib in toolchain.runtime_libraries]), # here are the paths to link
-            additional_inputs = depset(toolchain.runtime_libraries), # bazel to know where the actual files are
+            user_link_flags = depset([lib.path for lib in toolchain.runtime_libraries]),  # here are the paths to link
+            additional_inputs = depset(toolchain.runtime_libraries),  # bazel to know where the actual files are
         )
         linking_context = cc_common.create_linking_context(linker_inputs = depset([linker_input]))
-    
+
     # Merge this library's CcInfo with transitive dependencies' CcInfos (if any)
     if cc_infos:
         if linking_context:
@@ -201,7 +204,7 @@ fortran_library = rule(
     },
     toolchains = [
         "@rules_fortran//fortran:toolchain_type",
-        "@bazel_tools//tools/cpp:toolchain_type", # to create CcInfo (not just reading it like in fortran_binary)
+        "@bazel_tools//tools/cpp:toolchain_type",  # to create CcInfo (not just reading it like in fortran_binary)
     ],
-    fragments = ["cpp"], # `cc_common.configure_features()` requires this fragment thing
+    fragments = ["cpp"],  # `cc_common.configure_features()` requires this fragment thing
 )

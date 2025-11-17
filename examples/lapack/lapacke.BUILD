@@ -63,10 +63,10 @@ LAPACKE_HEADERS = [
 LAPACKE_UTILS_COMMON = [
     "utils/lapacke_lsame.c",
     "utils/lapacke_xerbla.c",
-    "utils/lapacke_make_complex_double.c", # should go into "LAPACK_UTILS_COMPLEX16"?
-    "utils/lapacke_make_complex_float.c", # should go into "LAPACK_UTILS_COMPLEX"?
-    "src/lapacke_ilaver.c", # not utils, should be in "LAPACKE_SRCS_COMMON"
-    "src/lapacke_nancheck.c", # not utils, should be in "LAPACKE_SRCS_COMMON"
+    "utils/lapacke_make_complex_double.c",  # should go into "LAPACK_UTILS_COMPLEX16"?
+    "utils/lapacke_make_complex_float.c",  # should go into "LAPACK_UTILS_COMPLEX"?
+    "src/lapacke_ilaver.c",  # not utils, should be in "LAPACKE_SRCS_COMMON"
+    "src/lapacke_nancheck.c",  # not utils, should be in "LAPACKE_SRCS_COMMON"
 ]
 
 # OBJ = \
@@ -2681,7 +2681,6 @@ LAPACKE_SRCS_MATGEN = [
     "src/lapacke_zlatms_work.c",
 ]
 
-
 #######################################################################
 # COMMON UTILITIES (precision-independent)
 #######################################################################
@@ -2689,10 +2688,10 @@ cc_library(
     name = "common",
     srcs = LAPACKE_UTILS_COMMON,
     hdrs = LAPACKE_HEADERS + [":generate_mangling_h"],
-    includes = ["include"],
     defines = [
         "ADD_",  # Fortran name mangling: lowercase with underscore
     ],
+    includes = ["include"],
 )
 
 #######################################################################
@@ -2702,12 +2701,12 @@ cc_library(
     name = "single",
     srcs = LAPACKE_SRCS_SINGLE + LAPACKE_UTILS_SINGLE,
     hdrs = LAPACKE_HEADERS + [":generate_mangling_h"],
+    defines = [
+        "ADD_",
+    ],
     includes = ["include"],
     deps = [
         ":common",
-    ],
-    defines = [
-        "ADD_",
     ],
 )
 
@@ -2718,13 +2717,13 @@ cc_library(
     name = "double",
     srcs = LAPACKE_SRCS_DOUBLE + LAPACKE_UTILS_DOUBLE,
     hdrs = LAPACKE_HEADERS + [":generate_mangling_h"],
+    defines = [
+        "ADD_",
+    ],
     includes = ["include"],
     deps = [
         ":common",
     ],
-    defines = [
-        "ADD_",
-    ]
 )
 
 #######################################################################
@@ -2734,12 +2733,12 @@ cc_library(
     name = "complex",
     srcs = LAPACKE_SRCS_COMPLEX + LAPACKE_UTILS_COMPLEX,
     hdrs = LAPACKE_HEADERS + [":generate_mangling_h"],
+    defines = [
+        "ADD_",
+    ],
     includes = ["include"],
     deps = [
         ":common",
-    ],
-    defines = [
-        "ADD_",
     ],
 )
 
@@ -2750,12 +2749,12 @@ cc_library(
     name = "complex16",
     srcs = LAPACKE_SRCS_COMPLEX16 + LAPACKE_UTILS_COMPLEX16,
     hdrs = LAPACKE_HEADERS + [":generate_mangling_h"],
+    defines = [
+        "ADD_",
+    ],
     includes = ["include"],
     deps = [
         ":common",
-    ],
-    defines = [
-        "ADD_",
     ],
 )
 
@@ -2764,12 +2763,12 @@ cc_library(
     name = "matgen",
     srcs = LAPACKE_SRCS_MATGEN + LAPACKE_UTILS_SINGLE + LAPACKE_UTILS_DOUBLE + LAPACKE_UTILS_COMPLEX + LAPACKE_UTILS_COMPLEX16,
     hdrs = LAPACKE_HEADERS + [":generate_mangling_h"],
-    includes = ["include"],
-    deps = [
-        ":common"
-    ],
     defines = [
         "ADD_",
+    ],
+    includes = ["include"],
+    deps = [
+        ":common",
     ],
 )
 
@@ -2778,11 +2777,11 @@ cc_library(
 #######################################################################
 cc_library(
     name = "lapacke",
+    includes = ["include"],
     deps = [
         ":single",
         ":double",
         ":complex",
         ":complex16",
     ],
-    includes = ["include"],
 )
