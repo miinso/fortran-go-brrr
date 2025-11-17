@@ -28,7 +28,7 @@ def _fortran_toolchain_impl(ctx):
             transitive = [dep[DefaultInfo].files for dep in ctx.attr.tool_deps],
         ),
     )
-    
+
     return [
         platform_common.ToolchainInfo(
             fortran = toolchain_info,

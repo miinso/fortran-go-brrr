@@ -1,13 +1,15 @@
 """Implementation of fortran_test rule."""
 
-load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(":compile.bzl", "compile_fortran")
+load(":providers.bzl", "FortranInfo")
 
 def _fortran_test_impl(ctx):
     toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
 
     # Collect dependencies from both Fortran and C/C++ libraries
-    transitive_objects = []
+    # transitive_objects = [] # TODO: per object linking
+    transitive_libraries = []
     module_map = {}
     link_flags = []
     cc_libraries = []
@@ -16,7 +18,7 @@ def _fortran_test_impl(ctx):
     for dep in ctx.attr.deps:
         # Handle Fortran dependencies
         if FortranInfo in dep:
-            transitive_objects.append(dep[FortranInfo].transitive_objects)
+            transitive_libraries.append(dep[FortranInfo].transitive_libraries)
             module_map.update(dep[FortranInfo].module_map)
             link_flags.extend(dep[FortranInfo].link_flags)
 
@@ -32,6 +34,8 @@ def _fortran_test_impl(ctx):
                     elif library.static_library != None:
                         cc_libraries.append(library.static_library)
 
+
+
                     # Collect object files
                     if hasattr(library, "objects") and library.objects != None:
                         cc_objects.extend(library.objects)
@@ -39,9 +43,9 @@ def _fortran_test_impl(ctx):
                 # Collect user link flags
                 if hasattr(linker_input, "user_link_flags"):
                     link_flags.extend(linker_input.user_link_flags)
-    
+
     # Compile sources
-    objects = []
+    fortran_objects = []
     for src in ctx.files.srcs:
         result = compile_fortran(
             ctx = ctx,
@@ -51,33 +55,48 @@ def _fortran_test_impl(ctx):
             copts = ctx.attr.copts,
             defines = ctx.attr.defines,
         )
-        objects.append(result.object)
-    
-    # Collect all objects from Fortran dependencies
-    fortran_objects = depset(
-        direct = objects,
-        transitive = transitive_objects,
+        fortran_objects.append(result.object)
+
+    # Collect all libraries from dependencies in topological order
+    # (dependencies come after dependents, allowing linker to resolve symbols correctly)
+    # See: https://bazel.build/extending/depsets#order
+    fortran_libraries = depset(
+        transitive = transitive_libraries,
+        order = "topological",
     ).to_list()
 
-    # Combine all objects and libraries (Fortran + C/C++)
+    # Combine Fortran and C/C++ libraries
+    all_libraries = fortran_libraries + cc_libraries
+
+    # Combine all object files (Fortran + C/C++)
     all_objects = fortran_objects + cc_objects
-    all_libraries = cc_libraries
 
     # Link test executable
     executable = ctx.actions.declare_file(ctx.label.name)
 
     args = ctx.actions.args()
-    args.add_all(all_objects)
 
-    # Add C/C++ libraries
+    # Add all object files first (both Fortran and C/C++)
+    for obj in all_objects:
+        args.add(obj)
+
+    # Add libraries in topological order with deduplication
+    # rules_cc did use a set to dedup libraries
+    seen_libraries = {}
     for lib in all_libraries:
-        args.add(lib)
+        if lib not in seen_libraries:
+            args.add(lib)
+            seen_libraries[lib] = True
 
     args.add("-o", executable.path)
     args.add_all(toolchain.linker_flags)
     args.add_all(link_flags)
     args.add_all(ctx.attr.linkopts)
-    
+
+    # Use param file to avoid "Argument list too long" errors on Windows/Linux
+    args.use_param_file("@%s", use_always = True)
+    args.set_param_file_format("multiline")
+
     ctx.actions.run(
         executable = toolchain.linker,
         arguments = [args],
@@ -90,12 +109,12 @@ def _fortran_test_impl(ctx):
         progress_message = "Linking Fortran test {}".format(executable.short_path),
         use_default_shell_env = True,
     )
-    
+
     # Create runfiles
     runfiles = ctx.runfiles(files = [executable])
     for dep in ctx.attr.deps:
         runfiles = runfiles.merge(ctx.runfiles(transitive_files = dep[DefaultInfo].default_runfiles.files))
-    
+
     return [
         DefaultInfo(
             files = depset([executable]),

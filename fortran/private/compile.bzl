@@ -1,8 +1,7 @@
 """Fortran compilation actions."""
 
-load(":providers.bzl", "FortranToolchainInfo")
-
-CompileResult = provider(
+CompileResultInfo = provider(
+    "Compilation outputs for a single Fortran source file.",
     fields = ["object", "module"],
 )
 
@@ -18,10 +17,11 @@ def _needs_preprocessing(src):
 
 def _extract_module_name(src):
     """Extract potential module name from source file.
-    
+
     This is a heuristic - the actual module name is determined during compilation.
     """
     basename = src.basename
+
     # Remove extension
     for ext in [".f90", ".f95", ".f03", ".f08", ".F90", ".F95", ".F03", ".F08", ".f", ".F"]:
         if basename.endswith(ext):
@@ -31,7 +31,7 @@ def _extract_module_name(src):
 
 def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
     """Compile a single Fortran source file.
-    
+
     Args:
         ctx: Rule context
         toolchain: FortranToolchainInfo provider
@@ -39,20 +39,21 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
         module_map: Dictionary of module names to module files
         copts: Additional compilation options
         defines: Preprocessor defines (e.g., ['_OPENMP', 'USE_MPI'])
-        
+
     Returns:
-        CompileResult with object and module files
+        CompileResultInfo with object and module files
     """
+
     # Declare output files
     src_base = src.basename.replace(".", "_")
     obj = ctx.actions.declare_file(
-        "{}_objs/{}.o".format(ctx.label.name, src_base)
+        "{}_objs/{}.o".format(ctx.label.name, src_base),
     )
 
     # Declare a directory for module outputs (one per source file)
     # This allows 0 or more .mod files to be created
     module_output_dir = ctx.actions.declare_directory(
-        "{}_modules/{}".format(ctx.label.name, src_base)
+        "{}_modules/{}".format(ctx.label.name, src_base),
     )
 
     # Build arguments
@@ -72,10 +73,10 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
     if _needs_preprocessing(src):
         # Add preprocessor enable flag (e.g., -cpp or -fpp)
         args.add(toolchain.preprocessor_flag)
-        
+
         # Add toolchain-level preprocessor flags
         args.add_all(toolchain.preprocessor_flags)
-        
+
         # Add target-specific preprocessor defines
         for define in defines:
             args.add("-D" + define)
@@ -84,7 +85,7 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
     if toolchain.supports_module_path:
         flag = toolchain.module_flag_format.format(module_output_dir.path)
         args.add(flag)
-    
+
     # Module search paths from dependencies
     # module_map now contains directories (not individual .mod files)
     module_dirs = []
@@ -122,7 +123,7 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
         progress_message = "Compiling Fortran {}".format(src.short_path),
     )
 
-    return CompileResult(
+    return CompileResultInfo(
         object = obj,
         module = module_output_dir,  # Return directory instead of specific file
     )

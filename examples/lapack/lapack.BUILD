@@ -13,7 +13,7 @@ Usage in your BUILD file:
   deps = ["@lapack//:double"]  # Only double precision
 """
 
-load("@rules_fortran//:defs.bzl", "fortran_binary", "fortran_library", "fortran_test")
+load("@rules_fortran//:defs.bzl", "fortran_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -27,7 +27,7 @@ ALLAUX_SRCS = [
     # "SRC/xerbla.f",
     # "SRC/xerbla_array.f",
     "SRC/iparmq.f",
-    "SRC/iparam2stage.F", # gotcha
+    "SRC/iparam2stage.F",  # gotcha
     "SRC/la_xisnan.f90",
     "SRC/ilaprec.f",
     "SRC/ilatrans.f",
@@ -80,7 +80,7 @@ SCLAUX_SRCS = [
     "SRC/slarrr.f",
     "SRC/slaneg.f",
     "SRC/slartg.f90",
-    "SRC/slaruv.f",
+    # "SRC/slaruv.f", # no-opt
     "SRC/slas2.f",
     "SRC/slascl.f",
     "SRC/slasd0.f",
@@ -160,7 +160,7 @@ DZLAUX_SRCS = [
     "SRC/dlarrr.f",
     "SRC/dlaneg.f",
     "SRC/dlartg.f90",
-    "SRC/dlaruv.f",
+    # "SRC/dlaruv.f", # no-opt
     "SRC/dlas2.f",
     "SRC/dlascl.f",
     "SRC/dlasd0.f",
@@ -592,7 +592,7 @@ SLASRC_SRCS = [
     "SRC/slaorhr_col_getrfnp2.f",
     "SRC/ssytrd_2stage.f",
     "SRC/ssytrd_sy2sb.f",
-    "SRC/ssytrd_sb2st.F", # gotcha
+    "SRC/ssytrd_sb2st.F",  # gotcha
     "SRC/ssb2st_kernels.f",
     "SRC/ssyevd_2stage.f",
     "SRC/ssyev_2stage.f",
@@ -1073,7 +1073,7 @@ CLASRC_SRCS = [
     "SRC/claunhr_col_getrfnp2.f",
     "SRC/chetrd_2stage.f",
     "SRC/chetrd_he2hb.f",
-    "SRC/chetrd_hb2st.F", # gotcha
+    "SRC/chetrd_hb2st.F",  # gotcha
     "SRC/chb2st_kernels.f",
     "SRC/cheevd_2stage.f",
     "SRC/cheev_2stage.f",
@@ -1497,7 +1497,7 @@ DLASRC_SRCS = [
     "SRC/dlaorhr_col_getrfnp2.f",
     "SRC/dsytrd_2stage.f",
     "SRC/dsytrd_sy2sb.f",
-    "SRC/dsytrd_sb2st.F", # gotcha
+    "SRC/dsytrd_sb2st.F",  # gotcha
     "SRC/dsb2st_kernels.f",
     "SRC/dsyevd_2stage.f",
     "SRC/dsyev_2stage.f",
@@ -1979,7 +1979,7 @@ ZLASRC_SRCS = [
     "SRC/zlaunhr_col_getrfnp2.f",
     "SRC/zhetrd_2stage.f",
     "SRC/zhetrd_he2hb.f",
-    "SRC/zhetrd_hb2st.F", # gotcha
+    "SRC/zhetrd_hb2st.F",  # gotcha
     "SRC/zhb2st_kernels.f",
     "SRC/zheevd_2stage.f",
     "SRC/zheev_2stage.f",
@@ -2039,7 +2039,10 @@ fortran_library(
 # Auxiliary routines (cross-precision, excluding modules)
 fortran_library(
     name = "allaux",
-    srcs = [s for s in ALLAUX_SRCS if s not in ["SRC/la_xisnan.F90", "SRC/la_xisnan.f90"]],
+    srcs = [s for s in ALLAUX_SRCS if s not in [
+        "SRC/la_xisnan.F90",
+        "SRC/la_xisnan.f90",
+    ]],
     deps = [":modules"],
 )
 
@@ -2047,14 +2050,22 @@ fortran_library(
 fortran_library(
     name = "sclaux",
     srcs = [s for s in SCLAUX_SRCS if s not in NO_OPT_SINGLE_SRCS and s != "SRC/la_constants.f90"],
-    deps = [":allaux", ":modules"],
+    deps = [
+        ":allaux",
+        ":modules",
+        # ":no_opt_single", # no-opts are consumed as deps, not srcs
+    ],
 )
 
 # Double/complex16 precision auxiliary routines (excluding no-opt and module files)
 fortran_library(
     name = "dzlaux",
     srcs = [s for s in DZLAUX_SRCS if s not in NO_OPT_DOUBLE_SRCS and s != "SRC/la_constants.f90"],
-    deps = [":allaux", ":modules"],
+    deps = [
+        ":allaux",
+        ":modules",
+        # ":no_opt_double", # no-opts are consumed as deps, not srcs
+    ],
 )
 
 # No-optimization files for single precision
@@ -2112,9 +2123,9 @@ fortran_library(
     name = "single",
     srcs = SLASRC_SRCS,
     deps = [
-        ":sclaux",
-        ":no_opt_single",
         ":dslasrc",
+        ":no_opt_single",
+        ":sclaux",
         "@blas//:single",
     ],
 )
@@ -2124,9 +2135,9 @@ fortran_library(
     name = "double",
     srcs = DLASRC_SRCS,
     deps = [
+        ":dslasrc",
         ":dzlaux",
         ":no_opt_double",
-        ":dslasrc",
         "@blas//:double",
     ],
 )
@@ -2136,8 +2147,8 @@ fortran_library(
     name = "complex",
     srcs = CLASRC_SRCS,
     deps = [
-        ":sclaux",
         ":no_opt_complex",
+        ":sclaux",
         ":zclasrc",
         "@blas//:complex",
     ],

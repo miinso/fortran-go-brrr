@@ -1,12 +1,14 @@
 """Implementation of fortran_binary rule."""
 
-load(":providers.bzl", "FortranInfo", "FortranToolchainInfo")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(":compile.bzl", "compile_fortran")
+load(":providers.bzl", "FortranInfo")
 
 def _fortran_binary_impl(ctx):
     toolchain = ctx.toolchains["@rules_fortran//fortran:toolchain_type"].fortran
 
     # Collect dependencies from both Fortran and C/C++ libraries
+    # transitive_objects = [] # TODO: per object linking
     transitive_libraries = []
     module_map = {}
     link_flags = []
@@ -31,6 +33,7 @@ def _fortran_binary_impl(ctx):
                         cc_libraries.append(library.pic_static_library)
                     elif library.static_library != None:
                         cc_libraries.append(library.static_library)
+
                     # TODO(minseo): Handle dynamic libraries
 
                     # Collect object files
@@ -53,7 +56,7 @@ def _fortran_binary_impl(ctx):
             defines = ctx.attr.defines,
         )
         fortran_objects.append(result.object)
-    
+
     # Collect all libraries from dependencies in topological order
     # (dependencies come after dependents, allowing linker to resolve symbols correctly)
     # See: https://bazel.build/extending/depsets#order
@@ -84,16 +87,16 @@ def _fortran_binary_impl(ctx):
         if lib not in seen_libraries:
             args.add(lib)
             seen_libraries[lib] = True
-    
+
     args.add("-o", executable.path)
     args.add_all(toolchain.linker_flags)
     args.add_all(link_flags)
     args.add_all(ctx.attr.linkopts)
-    
+
     # Use param file to avoid "Argument list too long" errors on Windows/Linux
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
-    
+
     ctx.actions.run(
         executable = toolchain.linker,
         arguments = [args],
@@ -106,7 +109,7 @@ def _fortran_binary_impl(ctx):
         progress_message = "Linking Fortran binary {}".format(executable.short_path),
         use_default_shell_env = True,
     )
-    
+
     return [
         DefaultInfo(
             files = depset([executable]),
