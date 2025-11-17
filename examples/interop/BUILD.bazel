@@ -1,7 +1,7 @@
 # bidirectional interop between C and Fortran code
 
 load("//:defs.bzl", "fortran_library", "fortran_test")
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 # Fortran calls C
 cc_library(
@@ -38,4 +38,17 @@ cc_test(
     name = "c_calls_fortran_runtime",
     srcs = ["c_calls_fortran_runtime.c"],
     deps = [":fortran_runtime_features"],
+)
+
+# full lapacke client
+cc_test(
+    name = "full",
+    srcs = [
+        "full.c",
+    ],
+    deps = [
+        "@lapacke",
+        "@lapack",
+        "@blas",
+    ]
 )
