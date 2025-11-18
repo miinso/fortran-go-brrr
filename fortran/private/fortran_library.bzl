@@ -95,34 +95,44 @@ def _fortran_library_impl(ctx):
     libraries = [archive] if archive else []
 
     # CcInfo: Allows C/C++ rules (cc_binary, cc_library) to link against this Fortran library
-    cc_infos = [dep[CcInfo] for dep in ctx.attr.deps if CcInfo in dep]
-
-    compilation_context = cc_common.create_compilation_context()
-    linking_context = None
+    cc_infos = []
 
     if archive:
+        # 1. create CcInfo for this library's archive
         cc_toolchain = find_cc_toolchain(ctx)
-        lib_to_link = cc_common.create_library_to_link(
+        library_to_link = cc_common.create_library_to_link(
             actions = ctx.actions,
             feature_configuration = cc_common.configure_features(ctx = ctx, cc_toolchain = cc_toolchain),
             static_library = archive,
         )
         linker_input = cc_common.create_linker_input(
             owner = ctx.label,
-            libraries = depset([lib_to_link]),
-            # provide runtime libs by default
-            user_link_flags = depset([lib.path for lib in toolchain.runtime_libraries]),  # here are the paths to link
-            additional_inputs = depset(toolchain.runtime_libraries),  # bazel to know where the actual files are
+            libraries = depset([library_to_link]),
+            # runtime libs are in toolchain, not here
         )
         linking_context = cc_common.create_linking_context(linker_inputs = depset([linker_input]))
+        cc_infos.append(CcInfo(
+            compilation_context = cc_common.create_compilation_context(),
+            linking_context = linking_context,
+        ))
 
-    # Merge this library's CcInfo with transitive dependencies' CcInfos (if any)
+        # 2. add toolchain runtime CcInfo (once, from toolchain)
+        cc_infos.append(toolchain.runtime_ccinfo)
+
+    # 3. collect and add CcInfo from dependencies
+    for dep in ctx.attr.deps:
+        if CcInfo in dep:
+            cc_infos.append(dep[CcInfo])
+
+    # 4. merge all CcInfos (or create empty if none)
+    # always return CcInfo even for libraries with no sources. See: 500609c
     if cc_infos:
-        if linking_context:
-            cc_infos = [CcInfo(compilation_context = compilation_context, linking_context = linking_context)] + cc_infos
-        merged_cc_info = cc_common.merge_cc_infos(cc_infos = cc_infos)
-        compilation_context = merged_cc_info.compilation_context
-        linking_context = merged_cc_info.linking_context
+        merged = cc_common.merge_cc_infos(cc_infos = cc_infos)
+        compilation_context = merged.compilation_context
+        linking_context = merged.linking_context
+    else:
+        compilation_context = cc_common.create_compilation_context()
+        linking_context = cc_common.create_linking_context()
 
     return [
         DefaultInfo(files = depset(output_files)),
