@@ -91,15 +91,12 @@ def _fortran_binary_impl(ctx):
     args.add("-o", executable.path)
     args.add_all(toolchain.linker_flags)
 
-    # Deduplicate link flags from CcInfo.user_link_flags
-    seen_flags = {}
-    for flag in link_flags:
-        if flag not in seen_flags:
-            args.add(flag)
-            seen_flags[flag] = True
+    # Add link flags from dependencies
+    # say we trust `cc_common.merge_cc_infos` to do its job
+    args.add_all(link_flags)
     args.add_all(ctx.attr.linkopts)
 
-    # Use param file to avoid "Argument list too long" errors on Windows/Linux
+    # Use param file to avoid (possible) "Argument list too long" errors
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
 
@@ -116,10 +113,17 @@ def _fortran_binary_impl(ctx):
         use_default_shell_env = True,
     )
 
+    # Create runfiles
+    # See: https://bazel.build/extending/rules#runfiles
+    runfiles = ctx.runfiles(files = [executable])
+    for dep in ctx.attr.deps:
+        runfiles = runfiles.merge(ctx.runfiles(transitive_files = dep[DefaultInfo].default_runfiles.files))
+
     return [
         DefaultInfo(
             files = depset([executable]),
             executable = executable,
+            runfiles = runfiles,
         ),
     ]
 
