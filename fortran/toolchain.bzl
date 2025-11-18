@@ -1,12 +1,89 @@
 """Fortran toolchain definitions."""
 
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("//fortran/private:providers.bzl", "FortranToolchainInfo")
+
+def _make_runtime_ccinfo(ctx, cc_toolchain, feature_configuration, runtime_libs):
+    """Create CcInfo for Fortran runtime libraries.
+
+    This creates a CcInfo provider containing the Fortran runtime libraries
+    (libflang_rt.runtime.a, libclang_rt.builtins.a) in a way that can be
+    merged once into all fortran_library targets,
+
+    Args:
+        ctx: Rule context
+        cc_toolchain: The C++ toolchain
+        feature_configuration: Feature configuration from cc_common
+        runtime_libs: List of runtime library files
+
+    Returns:
+        CcInfo provider containing the runtime libraries
+    """
+    if not runtime_libs:
+        # No runtime libs - return empty CcInfo
+        return CcInfo(
+            compilation_context = cc_common.create_compilation_context(),
+            linking_context = cc_common.create_linking_context(),
+        )
+
+    # Create library_to_link for each runtime library
+    libraries_to_link = []
+    for lib in runtime_libs:
+        # Determine if this is a static or dynamic library based on extension
+        # TODO: shared lib support
+        is_static = lib.extension == "a" or lib.extension == "lib"
+        is_dynamic = lib.extension in ["so", "dylib", "dll"]
+
+        library_to_link = cc_common.create_library_to_link(
+            actions = ctx.actions,
+            feature_configuration = feature_configuration,
+            cc_toolchain = cc_toolchain,
+            static_library = lib if is_static else None,
+            dynamic_library = lib if is_dynamic else None,
+        )
+        libraries_to_link.append(library_to_link)
+
+    # Create linker_input with the runtime libraries
+    linker_input = cc_common.create_linker_input(
+        owner = ctx.label,
+        libraries = depset(libraries_to_link),
+        # NOTE: additional link flags (like -lpthread) should be in linker_flags if needed
+    )
+
+    # Create and return CcInfo
+    linking_context = cc_common.create_linking_context(
+        linker_inputs = depset([linker_input]),
+    )
+
+    return CcInfo(
+        compilation_context = cc_common.create_compilation_context(),
+        linking_context = linking_context,
+    )
 
 def _fortran_toolchain_impl(ctx):
     # Collect runtime library files from dependencies
     runtime_lib_files = []
     for dep in ctx.attr.runtime_libraries:
         runtime_lib_files.extend(dep[DefaultInfo].files.to_list())
+
+    # Get C++ toolchain and create CcInfo for runtime libraries
+    cc_toolchain = find_cpp_toolchain(ctx)
+    feature_configuration = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ctx.disabled_features,
+    )
+
+    # Create CcInfo for runtime libraries (kind of similar to rules_rust stdlib_linkflags)
+    runtime_ccinfo = _make_runtime_ccinfo(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        feature_configuration = feature_configuration,
+        runtime_libs = runtime_lib_files,
+    )
 
     toolchain_info = FortranToolchainInfo(
         compiler = ctx.file.compiler,
@@ -19,6 +96,7 @@ def _fortran_toolchain_impl(ctx):
         supports_module_path = ctx.attr.supports_module_path,
         module_flag_format = ctx.attr.module_flag_format,
         runtime_libraries = runtime_lib_files,
+        runtime_ccinfo = runtime_ccinfo,
         all_files = depset(
             direct = [
                 ctx.file.compiler,
@@ -107,7 +185,12 @@ fortran_toolchain = rule(
             default = [],
             doc = "flang/clang runtime libraries (flang_rt, clang_rt) for C/Fortran interop.",
         ),
+        "_cc_toolchain": attr.label(
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+        ),
     },
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    fragments = ["cpp"],
 )
 
 def _fortran_toolchain_alias_impl(ctx):
