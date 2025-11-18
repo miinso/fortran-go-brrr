@@ -45,6 +45,7 @@ SCLAUX_SRCS = [
     "SRC/sbdsdc.f",
     "SRC/sbdsqr.f",
     "SRC/sdisna.f",
+    "SRC/sgetrf2.f",  # Moved from SLASRC - auxiliary factorization routine
     "SRC/slabad.f",
     "SRC/slacpy.f",
     "SRC/sladiv.f",
@@ -106,6 +107,7 @@ SCLAUX_SRCS = [
     "SRC/slasrt.f",
     "SRC/slassq.f90",
     "SRC/slasv2.f",
+    "SRC/slaswp.f",  # Moved from SLASRC - auxiliary row interchange routine
     "SRC/spttrf.f",
     "SRC/sstebz.f",
     "SRC/sstedc.f",
@@ -125,6 +127,7 @@ DZLAUX_SRCS = [
     "SRC/dbdsdc.f",
     "SRC/dbdsqr.f",
     "SRC/ddisna.f",
+    "SRC/dgetrf2.f",  # Moved from DLASRC - auxiliary factorization routine
     "SRC/dlabad.f",
     "SRC/dlacpy.f",
     "SRC/dladiv.f",
@@ -186,6 +189,7 @@ DZLAUX_SRCS = [
     "SRC/dlasrt.f",
     "SRC/dlassq.f90",
     "SRC/dlasv2.f",
+    "SRC/dlaswp.f",  # Moved from DLASRC - auxiliary row interchange routine
     "SRC/dpttrf.f",
     "SRC/dstebz.f",
     "SRC/dstedc.f",
@@ -204,7 +208,7 @@ DZLAUX_SRCS = [
 SLASRC_SRCS = [
     "SRC/sbdsvdx.f",
     "SRC/spotrf2.f",
-    "SRC/sgetrf2.f",
+    # "SRC/sgetrf2.f",  # Moved to SCLAUX - auxiliary routine
     "SRC/sgbbrd.f",
     "SRC/sgbcon.f",
     "SRC/sgbequ.f",
@@ -350,7 +354,7 @@ SLASRC_SRCS = [
     "SRC/slarz.f",
     "SRC/slarzb.f",
     "SRC/slarzt.f",
-    "SRC/slaswp.f",
+    # "SRC/slaswp.f",  # Moved to SCLAUX - auxiliary routine
     "SRC/slasy2.f",
     "SRC/slasyf.f",
     "SRC/slasyf_rook.f",
@@ -1099,7 +1103,7 @@ ZCLASRC_SRCS = [
 # DLASRC: Double precision LAPACK routines
 DLASRC_SRCS = [
     "SRC/dpotrf2.f",
-    "SRC/dgetrf2.f",
+    # "SRC/dgetrf2.f",  # Moved to DZLAUX - auxiliary routine
     "SRC/dbdsvdx.f",
     "SRC/dgbbrd.f",
     "SRC/dgbcon.f",
@@ -1248,7 +1252,7 @@ DLASRC_SRCS = [
     "SRC/dlarz.f",
     "SRC/dlarzb.f",
     "SRC/dlarzt.f",
-    "SRC/dlaswp.f",
+    # "SRC/dlaswp.f",  # Moved to DZLAUX - auxiliary routine
     "SRC/dlasy2.f",
     "SRC/dlasyf.f",
     "SRC/dlasyf_rook.f",
@@ -2053,7 +2057,7 @@ fortran_library(
     deps = [
         ":allaux",
         ":modules",
-        # ":no_opt_single", # no-opts are consumed as deps, not srcs
+        ":no_opt_single",  # no-opts are consumed as deps, not srcs
     ],
 )
 
@@ -2064,7 +2068,7 @@ fortran_library(
     deps = [
         ":allaux",
         ":modules",
-        # ":no_opt_double", # no-opts are consumed as deps, not srcs
+        ":no_opt_double",  # no-opts are consumed as deps, not srcs
     ],
 )
 
@@ -2106,6 +2110,7 @@ fortran_library(
     srcs = DSLASRC_SRCS,
     deps = [
         ":sclaux",
+        "@blas//:single",  # BLAS functions for single precision (strsm, sgemm, etc)
     ],
 )
 
