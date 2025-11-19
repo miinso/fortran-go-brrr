@@ -1,4 +1,4 @@
-load("//:defs.bzl", "fortran_binary", "fortran_test")
+load("@rules_fortran//fortran:defs.bzl", "fortran_binary", "fortran_test")
 
 # simple DGESV run
 fortran_test(

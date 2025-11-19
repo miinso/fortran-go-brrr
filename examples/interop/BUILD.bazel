@@ -1,6 +1,6 @@
 # bidirectional interop between C and Fortran code
 
-load("//:defs.bzl", "fortran_library", "fortran_test")
+load("@rules_fortran//fortran:defs.bzl", "fortran_library", "fortran_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 # Fortran calls C

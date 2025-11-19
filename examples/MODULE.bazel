@@ -1,0 +1,49 @@
+"""Test module for rules_fortran examples.
+
+This module depends on the parent rules_fortran module and adds
+example-specific dependencies (BLAS, LAPACK, LAPACKE) that are not needed
+by users of rules_fortran.
+"""
+
+module(
+    name = "rules_fortran_examples",
+    version = "0.0.0",
+)
+
+# Depend on parent rules_fortran
+bazel_dep(name = "rules_fortran", version = "0.0.0")
+local_path_override(
+    module_name = "rules_fortran",
+    path = "..",  # Parent directory
+)
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# Netlib BLAS (for BLAS examples)
+http_archive(
+    name = "blas",
+    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
+    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
+    strip_prefix = "lapack-3.12.1/BLAS",
+    build_file = "//blas:blas.BUILD",
+)
+
+# Netlib LAPACK (for LAPACK examples)
+http_archive(
+    name = "lapack",
+    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
+    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
+    strip_prefix = "lapack-3.12.1",
+    build_file = "//lapack:lapack.BUILD",
+)
+
+# LAPACKE - C interface to LAPACK (for interop examples)
+http_archive(
+    name = "lapacke",
+    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
+    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
+    strip_prefix = "lapack-3.12.1/LAPACKE",
+    build_file = "//lapack:lapacke.BUILD",
+    patches = ["//lapack:pr-1164-msvc-complex.patch"],  # discard once they rollout #1164
+    patch_args = ["-p2"],  # strip 2 levels: lapack-3.12.1/LAPACKE/
+)

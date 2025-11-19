@@ -1,16 +1,12 @@
-"""Examples for rules_fortran."""
+load("@rules_fortran//fortran:defs.bzl", "fortran_binary", "fortran_library", "fortran_test")
 
-load("//:defs.bzl", "fortran_binary", "fortran_library", "fortran_test")
-
-# ===== Simple Hello World =====
-
+# Hello World
 fortran_binary(
     name = "hello",
     srcs = ["hello.f90"],
 )
 
-# ===== Library Example =====
-
+# Library Example
 fortran_library(
     name = "math_lib",
     srcs = [
@@ -30,8 +26,7 @@ fortran_library(
     srcs = ["core.f90"],
 )
 
-# ===== Application with Dependencies =====
-
+# with dependencies
 fortran_binary(
     name = "app",
     srcs = ["main.f90"],
@@ -43,8 +38,7 @@ fortran_binary(
     ],
 )
 
-# ===== Test Example =====
-
+# some tests
 fortran_test(
     name = "math_test",
     srcs = ["math_test.f90"],

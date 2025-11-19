@@ -10,7 +10,9 @@ module(
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.4")
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# overkill?
+bazel_dep(name = "rules_testing", version = "0.7.0", dev_dependency = True)
 
 # Configure LLVM/Flang toolchain
 llvm_flang = use_extension("//fortran:extensions.bzl", "llvm_flang")
@@ -36,33 +38,4 @@ register_toolchains(
     "//fortran/toolchains:macos_aarch64_toolchain",
     "//fortran/toolchains:windows_x86_64_toolchain",
     "//fortran/toolchains:wasm_toolchain",
-)
-
-# Netlib BLAS (for examples)
-http_archive(
-    name = "blas",
-    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
-    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
-    strip_prefix = "lapack-3.12.1/BLAS",
-    build_file = "//examples/refblas:blas.BUILD",
-)
-
-# Netlib LAPACK (for examples)
-http_archive(
-    name = "lapack",
-    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
-    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
-    strip_prefix = "lapack-3.12.1",
-    build_file = "//examples/lapack:lapack.BUILD",
-)
-
-# LAPACKE - C interface to LAPACK (for examples)
-http_archive(
-    name = "lapacke",
-    url = "https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz",
-    sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422",
-    strip_prefix = "lapack-3.12.1/LAPACKE",
-    build_file = "//examples/lapack:lapacke.BUILD",
-    patches = ["//examples/lapack:pr-1164-msvc-complex.patch"],  # discard once they rollout #1164
-    patch_args = ["-p2"],  # strip 2 levels: lapack-3.12.1/LAPACKE/
 )
