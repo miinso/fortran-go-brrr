@@ -192,8 +192,8 @@ fortran_library = rule(
             doc = "List of Fortran source files to compile.",
         ),
         "deps": attr.label_list(
-            providers = [FortranInfo],
-            doc = "List of other fortran_library targets that this library depends on.",
+            providers = [[FortranInfo], [CcInfo]],
+            doc = "List of fortran_library or cc_library targets that this library depends on.",
         ),
         "copts": attr.string_list(
             doc = "Additional compiler options to pass to the Fortran compiler.",
