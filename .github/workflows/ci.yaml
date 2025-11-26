@@ -8,7 +8,20 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux x86_64
+          - os: macos-13
+            name: macOS x86_64
+          - os: macos-latest
+            name: macOS ARM64
+          - os: windows-latest
+            name: Windows x86_64
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
       - name: Run unit tests
