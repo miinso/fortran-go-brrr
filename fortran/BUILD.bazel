@@ -1,16 +1,44 @@
-"""Fortran package BUILD file."""
+"""Fortran rules for Bazel."""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_visibility = ["//visibility:public"])
 
 # Toolchain type for Fortran compilation
-toolchain_type(
-    name = "toolchain_type",
-    visibility = ["//visibility:public"],
+toolchain_type(name = "toolchain_type")
+
+# Public API
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    deps = ["//fortran/private:rules"],
 )
 
-# Export public API files
+bzl_library(
+    name = "repositories",
+    srcs = ["repositories.bzl"],
+)
+
+bzl_library(
+    name = "extensions",
+    srcs = ["extensions.bzl"],
+    deps = [":repositories"],
+)
+
+bzl_library(
+    name = "toolchain",
+    srcs = ["toolchain.bzl"],
+)
+
+# For distribution
+filegroup(
+    name = "bzl_srcs",
+    srcs = glob(["**/*.bzl"]),
+)
+
 exports_files([
-    "toolchain.bzl",
-    "llvm_repositories.bzl",
+    "defs.bzl",
+    "repositories.bzl",
     "extensions.bzl",
+    "toolchain.bzl",
 ])
