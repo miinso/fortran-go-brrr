@@ -1,0 +1,17 @@
+# Bazel
+/bazel-*
+.bazelrc.local
+MODULE.bazel.lock
+
+# Build artifacts
+*.o
+*.mod
+*.a
+*.so
+*.dylib
+*.dll
+
+# Temporary files
+*.tmp
+*.bak
+.*.sw[op]

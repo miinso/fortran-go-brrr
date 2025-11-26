@@ -1,8 +1,8 @@
 load("@rules_python//python:defs.bzl", "py_test")
-load("@rules_fortran//fortran:defs.bzl", "fortran_binary")
+load("@rules_fortran//fortran:defs.bzl", "fortran_binary", "fortran_test")
 
 # Example: Simple BLAS DGEMM test
-fortran_binary(
+fortran_test(
     name = "main",
     srcs = ["main.f90"],
     copts = ["-O2"],

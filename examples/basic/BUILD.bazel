@@ -1,7 +1,7 @@
 load("@rules_fortran//fortran:defs.bzl", "fortran_binary", "fortran_library", "fortran_test")
 
 # Hello World
-fortran_binary(
+fortran_test(
     name = "hello",
     srcs = ["hello.f90"],
 )
@@ -27,7 +27,7 @@ fortran_library(
 )
 
 # with dependencies
-fortran_binary(
+fortran_test(
     name = "app",
     srcs = ["main.f90"],
     copts = ["-O2"],

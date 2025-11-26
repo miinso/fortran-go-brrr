@@ -1,0 +1,2 @@
+# Import root .bazelrc
+try-import %workspace%/../.bazelrc
