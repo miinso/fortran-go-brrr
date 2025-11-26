@@ -8,22 +8,22 @@ package(default_visibility = ["//visibility:public"])
 
 fortran_toolchain(
     name = "linux_x86_64_toolchain_impl",
-    archiver = "@llvm_flang_linux_x86_64//:llvm-ar",
-    compiler = "@llvm_flang_linux_x86_64//:flang-new",
+    archiver = "@flang_linux_x86_64//:llvm-ar",
+    compiler = "@flang_linux_x86_64//:flang-new",
     compiler_flags = [
         # "-Wall",
         # "-Wextra",
         "-pedantic",
     ],
-    linker = "@llvm_flang_linux_x86_64//:flang-new",
+    linker = "@flang_linux_x86_64//:flang-new",
     linker_flags = [
         "-lm",
         "-lpthread",
     ],
     module_flag_format = "-J{}",
-    runtime_libraries = ["@llvm_flang_linux_x86_64//:runtime_libraries"],
+    runtime_libraries = ["@flang_linux_x86_64//:runtime_libraries"],
     supports_module_path = True,
-    tool_deps = ["@llvm_flang_linux_x86_64//:compiler_files"],
+    tool_deps = ["@flang_linux_x86_64//:compiler_files"],
 )
 
 toolchain(
@@ -44,22 +44,22 @@ toolchain(
 
 fortran_toolchain(
     name = "linux_aarch64_toolchain_impl",
-    archiver = "@llvm_flang_linux_aarch64//:llvm-ar",
-    compiler = "@llvm_flang_linux_aarch64//:flang-new",
+    archiver = "@flang_linux_aarch64//:llvm-ar",
+    compiler = "@flang_linux_aarch64//:flang-new",
     compiler_flags = [
         # "-Wall",
         # "-Wextra",
         "-pedantic",
     ],
-    linker = "@llvm_flang_linux_aarch64//:flang-new",
+    linker = "@flang_linux_aarch64//:flang-new",
     linker_flags = [
         "-lm",
         "-lpthread",
     ],
     module_flag_format = "-J{}",
-    runtime_libraries = ["@llvm_flang_linux_aarch64//:runtime_libraries"],
+    runtime_libraries = ["@flang_linux_aarch64//:runtime_libraries"],
     supports_module_path = True,
-    tool_deps = ["@llvm_flang_linux_aarch64//:compiler_files"],
+    tool_deps = ["@flang_linux_aarch64//:compiler_files"],
 )
 
 toolchain(
@@ -80,23 +80,23 @@ toolchain(
 
 fortran_toolchain(
     name = "macos_x86_64_toolchain_impl",
-    archiver = "@llvm_flang_macos_x86_64//:llvm-ar",
-    compiler = "@llvm_flang_macos_x86_64//:flang-new",
+    archiver = "@flang_macos_x86_64//:llvm-ar",
+    compiler = "@flang_macos_x86_64//:flang-new",
     compiler_flags = [
         # "-Wall",
         # "-Wextra",
         "-pedantic",
     ],
-    linker = "@llvm_flang_macos_x86_64//:flang-new",
+    linker = "@flang_macos_x86_64//:flang-new",
     linker_flags = [
         "-Wl,-syslibroot,/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
         "-lm",
         "-lpthread",
     ],
     module_flag_format = "-J{}",
-    runtime_libraries = ["@llvm_flang_macos_x86_64//:runtime_libraries"],
+    runtime_libraries = ["@flang_macos_x86_64//:runtime_libraries"],
     supports_module_path = True,
-    tool_deps = ["@llvm_flang_macos_x86_64//:compiler_files"],
+    tool_deps = ["@flang_macos_x86_64//:compiler_files"],
 )
 
 toolchain(
@@ -117,23 +117,23 @@ toolchain(
 
 fortran_toolchain(
     name = "macos_aarch64_toolchain_impl",
-    archiver = "@llvm_flang_macos_aarch64//:llvm-ar",
-    compiler = "@llvm_flang_macos_aarch64//:flang-new",
+    archiver = "@flang_macos_aarch64//:llvm-ar",
+    compiler = "@flang_macos_aarch64//:flang-new",
     compiler_flags = [
         # "-Wall",
         # "-Wextra",
         "-pedantic",
     ],
-    linker = "@llvm_flang_macos_aarch64//:flang-new",
+    linker = "@flang_macos_aarch64//:flang-new",
     linker_flags = [
         "-Wl,-syslibroot,/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
         "-lm",
         "-lpthread",
     ],
     module_flag_format = "-J{}",
-    runtime_libraries = ["@llvm_flang_macos_aarch64//:runtime_libraries"],
+    runtime_libraries = ["@flang_macos_aarch64//:runtime_libraries"],
     supports_module_path = True,
-    tool_deps = ["@llvm_flang_macos_aarch64//:compiler_files"],
+    tool_deps = ["@flang_macos_aarch64//:compiler_files"],
 )
 
 toolchain(
@@ -154,18 +154,18 @@ toolchain(
 
 fortran_toolchain(
     name = "windows_x86_64_toolchain_impl",
-    archiver = "@llvm_flang_windows_x86_64//:llvm-ar",
-    compiler = "@llvm_flang_windows_x86_64//:flang-new",
+    archiver = "@flang_windows_x86_64//:llvm-ar",
+    compiler = "@flang_windows_x86_64//:flang-new",
     compiler_flags = [
         # "-Wall",
         # "-Wextra",
     ],
-    linker = "@llvm_flang_windows_x86_64//:flang-new",
+    linker = "@flang_windows_x86_64//:flang-new",
     linker_flags = [],
     module_flag_format = "-J{}",
-    runtime_libraries = ["@llvm_flang_windows_x86_64//:runtime_libraries"],
+    runtime_libraries = ["@flang_windows_x86_64//:runtime_libraries"],
     supports_module_path = True,
-    tool_deps = ["@llvm_flang_windows_x86_64//:compiler_files"],
+    tool_deps = ["@flang_windows_x86_64//:compiler_files"],
 )
 
 toolchain(
@@ -188,23 +188,23 @@ toolchain(
 fortran_toolchain(
     name = "wasm_toolchain_impl",
     archiver = select({
-        "@platforms//os:linux": "@llvm_flang_linux_x86_64//:llvm-ar",
-        "@platforms//os:macos": "@llvm_flang_macos_aarch64//:llvm-ar",
-        "//conditions:default": "@llvm_flang_linux_x86_64//:llvm-ar",
+        "@platforms//os:linux": "@flang_linux_x86_64//:llvm-ar",
+        "@platforms//os:macos": "@flang_macos_aarch64//:llvm-ar",
+        "//conditions:default": "@flang_linux_x86_64//:llvm-ar",
     }),
     compiler = select({
-        "@platforms//os:linux": "@llvm_flang_linux_x86_64//:flang-new",
-        "@platforms//os:macos": "@llvm_flang_macos_aarch64//:flang-new",
-        "//conditions:default": "@llvm_flang_linux_x86_64//:flang-new",
+        "@platforms//os:linux": "@flang_linux_x86_64//:flang-new",
+        "@platforms//os:macos": "@flang_macos_aarch64//:flang-new",
+        "//conditions:default": "@flang_linux_x86_64//:flang-new",
     }),
     compiler_flags = [
         "--target=wasm32-unknown-unknown",
         "-O2",
     ],
     linker = select({
-        "@platforms//os:linux": "@llvm_flang_linux_x86_64//:lld",
-        "@platforms//os:macos": "@llvm_flang_macos_aarch64//:lld",
-        "//conditions:default": "@llvm_flang_linux_x86_64//:lld",
+        "@platforms//os:linux": "@flang_linux_x86_64//:lld",
+        "@platforms//os:macos": "@flang_macos_aarch64//:lld",
+        "//conditions:default": "@flang_linux_x86_64//:lld",
     }),
     linker_flags = [
         "--target=wasm32-unknown-unknown",

@@ -15,20 +15,6 @@ def _needs_preprocessing(src):
     ext = src.extension
     return ext in ["F", "F90", "F95", "F03", "F08"]
 
-def _extract_module_name(src):
-    """Extract potential module name from source file.
-
-    This is a heuristic - the actual module name is determined during compilation.
-    """
-    basename = src.basename
-
-    # Remove extension
-    for ext in [".f90", ".f95", ".f03", ".f08", ".F90", ".F95", ".F03", ".F08", ".f", ".F"]:
-        if basename.endswith(ext):
-            basename = basename[:-len(ext)]
-            break
-    return basename.lower()
-
 def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
     """Compile a single Fortran source file.
 
