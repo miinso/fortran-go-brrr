@@ -21,15 +21,8 @@ flang = module_extension(
     tag_classes = {},
     doc = """Module extension for Flang toolchains.
 
-    Example:
-        flang = use_extension("@rules_fortran//fortran:extensions.bzl", "flang")
-        use_repo(
-            flang,
-            "flang_linux_x86_64",
-            "flang_linux_aarch64",
-            "flang_macos_x86_64",
-            "flang_macos_aarch64",
-            "flang_windows_x86_64",
-        )
+    Invoked by rules_fortran. You just need:
+
+        bazel_dep(name = "rules_fortran")
     """,
 )

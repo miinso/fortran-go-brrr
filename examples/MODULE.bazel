@@ -20,27 +20,6 @@ local_path_override(
     path = "..",  # Parent directory
 )
 
-# Import the Flang repos created by the flang extension (configured in rules_fortran)
-flang = use_extension("@rules_fortran//fortran:extensions.bzl", "flang")
-use_repo(
-    flang,
-    "flang_linux_x86_64",
-    "flang_linux_aarch64",
-    "flang_macos_x86_64",
-    "flang_macos_aarch64",
-    "flang_windows_x86_64",
-)
-
-# Register Fortran toolchains
-register_toolchains(
-    "@rules_fortran//fortran/toolchains:linux_x86_64_toolchain",
-    "@rules_fortran//fortran/toolchains:linux_aarch64_toolchain",
-    "@rules_fortran//fortran/toolchains:macos_x86_64_toolchain",
-    "@rules_fortran//fortran/toolchains:macos_aarch64_toolchain",
-    "@rules_fortran//fortran/toolchains:windows_x86_64_toolchain",
-    "@rules_fortran//fortran/toolchains:wasm_toolchain",
-)
-
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # Netlib BLAS (for BLAS examples)
