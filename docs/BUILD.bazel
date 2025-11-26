@@ -1,0 +1,10 @@
+"""Stardoc targets for rules_fortran documentation."""
+
+load("@stardoc//stardoc:stardoc.bzl", "stardoc")
+
+stardoc(
+    name = "rules_doc",
+    input = "//fortran:defs.bzl",
+    out = "rules.md",
+    deps = ["//fortran:defs"],
+)
