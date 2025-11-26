@@ -1,0 +1,12 @@
+{
+    "homepage": "https://github.com/miinso/rules_fortran",
+    "maintainers": [
+        {
+            "name": "Minseo Park",
+            "github": "miinso"
+        }
+    ],
+    "repository": ["github:miinso/rules_fortran"],
+    "versions": [],
+    "yanked_versions": {}
+}
