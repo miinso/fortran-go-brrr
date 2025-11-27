@@ -87,12 +87,17 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = [], includ
             args.add("-I" + dir_path)
 
     # Include directories (resolved relative to package, like rules_cc)
+    # Validate against "." and ".." to protect workspace (see cc_helper.bzl#L827-L833)
     package = ctx.label.package
     for inc in includes:
+        if ".." in inc:
+            fail("includes cannot contain '..': " + inc)
         if package:
             inc_path = package + "/" + inc
         else:
             inc_path = inc
+        if inc_path == "." or inc_path == "":
+            fail("includes resolves to workspace root, which would expose the entire workspace")
         args.add("-I" + inc_path)
 
     # Compile command

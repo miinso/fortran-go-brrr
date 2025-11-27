@@ -112,6 +112,28 @@ module_paths_in_compile_action_test = analysistest.make(
     _module_paths_in_compile_action_test_impl,
 )
 
+def _includes_dot_rejected_test_impl(ctx):
+    """Test that includes = ['.'] is rejected at workspace root."""
+    env = analysistest.begin(ctx)
+    asserts.expect_failure(env, "workspace root")
+    return analysistest.end(env)
+
+includes_dot_rejected_test = analysistest.make(
+    _includes_dot_rejected_test_impl,
+    expect_failure = True,
+)
+
+def _includes_dotdot_rejected_test_impl(ctx):
+    """Test that includes containing '..' is rejected."""
+    env = analysistest.begin(ctx)
+    asserts.expect_failure(env, "..")
+    return analysistest.end(env)
+
+includes_dotdot_rejected_test = analysistest.make(
+    _includes_dotdot_rejected_test_impl,
+    expect_failure = True,
+)
+
 def action_validation_test_suite(name):
     """Test suite for action validation."""
 
@@ -174,6 +196,21 @@ def action_validation_test_suite(name):
         target_under_test = ":lib_using_module",
     )
 
+    # Test that includes = [".."] is rejected (see #16)
+    # Note: includes_dot_rejected_test exists but requires root package to trigger,
+    # so only ".." validation is tested here. "." validation verified manually.
+    fortran_library(
+        name = "lib_with_dotdot_includes",
+        srcs = ["simple_regular.f90"],
+        includes = [".."],
+        tags = ["manual"],
+    )
+
+    includes_dotdot_rejected_test(
+        name = "includes_dotdot_rejected_test",
+        target_under_test = ":lib_with_dotdot_includes",
+    )
+
     # Bundle into test suite
     native.test_suite(
         name = name,
@@ -182,5 +219,6 @@ def action_validation_test_suite(name):
             ":defines_appear_in_compile_action_test",
             ":includes_appear_in_compile_action_test",
             ":module_paths_in_compile_action_test",
+            ":includes_dotdot_rejected_test",
         ],
     )
