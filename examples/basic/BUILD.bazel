@@ -45,9 +45,10 @@ fortran_test(
     deps = [":math_lib"],
 )
 
-# INCLUDE example - demonstrates includes attribute for .inc files
+# INCLUDE example - demonstrates hdrs attribute for .inc files
 fortran_test(
     name = "constants",
     srcs = ["use_include.f90"],
+    hdrs = ["include/constants.inc"],
     includes = ["include"],
 )

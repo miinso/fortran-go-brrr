@@ -134,6 +134,74 @@ includes_dotdot_rejected_test = analysistest.make(
     expect_failure = True,
 )
 
+def _hdrs_inc_appear_in_compile_action_test_impl(ctx):
+    """Test that .inc hdrs files appear as inputs to compile action."""
+    env = analysistest.begin(ctx)
+
+    actions = analysistest.target_actions(env)
+    compile_actions = [a for a in actions if a.mnemonic == "FortranCompile"]
+
+    asserts.true(
+        env,
+        len(compile_actions) > 0,
+        "Expected at least one FortranCompile action",
+    )
+
+    # Check that hdrs file appears in inputs
+    compile_action = compile_actions[0]
+    input_paths = [f.path for f in compile_action.inputs.to_list()]
+    has_inc_file = False
+    for p in input_paths:
+        if "test.inc" in p:
+            has_inc_file = True
+            break
+
+    asserts.true(
+        env,
+        has_inc_file,
+        "Expected hdrs file 'test.inc' in compile action inputs, got: " + str(input_paths),
+    )
+
+    return analysistest.end(env)
+
+hdrs_inc_appear_in_compile_action_test = analysistest.make(
+    _hdrs_inc_appear_in_compile_action_test_impl,
+)
+
+def _hdrs_mod_appear_in_compile_action_test_impl(ctx):
+    """Test that .mod hdrs files appear as inputs to compile action."""
+    env = analysistest.begin(ctx)
+
+    actions = analysistest.target_actions(env)
+    compile_actions = [a for a in actions if a.mnemonic == "FortranCompile"]
+
+    asserts.true(
+        env,
+        len(compile_actions) > 0,
+        "Expected at least one FortranCompile action",
+    )
+
+    # Check that hdrs file appears in inputs
+    compile_action = compile_actions[0]
+    input_paths = [f.path for f in compile_action.inputs.to_list()]
+    has_mod_file = False
+    for p in input_paths:
+        if "test.mod" in p:
+            has_mod_file = True
+            break
+
+    asserts.true(
+        env,
+        has_mod_file,
+        "Expected hdrs file 'test.mod' in compile action inputs, got: " + str(input_paths),
+    )
+
+    return analysistest.end(env)
+
+hdrs_mod_appear_in_compile_action_test = analysistest.make(
+    _hdrs_mod_appear_in_compile_action_test_impl,
+)
+
 def action_validation_test_suite(name):
     """Test suite for action validation."""
 
@@ -211,6 +279,32 @@ def action_validation_test_suite(name):
         target_under_test = ":lib_with_dotdot_includes",
     )
 
+    # Test hdrs attribute with .inc files (see #17)
+    fortran_library(
+        name = "lib_with_inc_hdrs",
+        srcs = ["simple_regular.f90"],
+        hdrs = ["test.inc"],
+        tags = ["manual"],
+    )
+
+    hdrs_inc_appear_in_compile_action_test(
+        name = "hdrs_inc_appear_in_compile_action_test",
+        target_under_test = ":lib_with_inc_hdrs",
+    )
+
+    # Test hdrs attribute with .mod files (see #17)
+    fortran_library(
+        name = "lib_with_mod_hdrs",
+        srcs = ["simple_regular.f90"],
+        hdrs = ["test.mod"],
+        tags = ["manual"],
+    )
+
+    hdrs_mod_appear_in_compile_action_test(
+        name = "hdrs_mod_appear_in_compile_action_test",
+        target_under_test = ":lib_with_mod_hdrs",
+    )
+
     # Bundle into test suite
     native.test_suite(
         name = name,
@@ -220,5 +314,7 @@ def action_validation_test_suite(name):
             ":includes_appear_in_compile_action_test",
             ":module_paths_in_compile_action_test",
             ":includes_dotdot_rejected_test",
+            ":hdrs_inc_appear_in_compile_action_test",
+            ":hdrs_mod_appear_in_compile_action_test",
         ],
     )

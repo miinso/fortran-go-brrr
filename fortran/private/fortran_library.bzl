@@ -53,6 +53,7 @@ def _fortran_library_impl(ctx):
             copts = ctx.attr.copts,
             defines = ctx.attr.defines,
             includes = ctx.attr.includes,
+            hdrs = ctx.files.hdrs,
         )
         objects.append(result.object)
         if result.module:
@@ -207,6 +208,10 @@ fortran_library = rule(
         ),
         "includes": attr.string_list(
             doc = "List of include directories to add to the compile line.",
+        ),
+        "hdrs": attr.label_list(
+            allow_files = [".inc", ".mod"],
+            doc = "Header/include files (.inc, .mod) for INCLUDE statements and pre-built modules.",
         ),
         # https://bazel.build/versions/8.4.0/configure/integrate-cpp
         "_cc_toolchain": attr.label(

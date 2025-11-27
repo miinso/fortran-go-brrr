@@ -55,6 +55,7 @@ def _fortran_binary_impl(ctx):
             copts = ctx.attr.copts,
             defines = ctx.attr.defines,
             includes = ctx.attr.includes,
+            hdrs = ctx.files.hdrs,
         )
         fortran_objects.append(result.object)
 
@@ -165,6 +166,10 @@ fortran_binary = rule(
         ),
         "includes": attr.string_list(
             doc = "List of include directories to add to the compile line.",
+        ),
+        "hdrs": attr.label_list(
+            allow_files = [".inc", ".mod"],
+            doc = "Header/include files (.inc, .mod) for INCLUDE statements and pre-built modules.",
         ),
         "linkopts": attr.string_list(
             doc = "Additional linker options.",
