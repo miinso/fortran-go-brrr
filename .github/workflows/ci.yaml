@@ -11,34 +11,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - macos-15
+          - macos-latest
+          - windows-latest
+        bazel: ['7.x', '8.x']
         include:
           - os: ubuntu-latest
             name: Linux x86_64
-          - os: macos-13
+          - os: macos-15
             name: macOS x86_64
           - os: macos-latest
             name: macOS ARM64
           - os: windows-latest
             name: Windows x86_64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
+    name: ${{ matrix.name }} (Bazel ${{ matrix.bazel }})
+    env:
+      USE_BAZEL_VERSION: ${{ matrix.bazel }}
     steps:
       - uses: actions/checkout@v4
       - name: Run unit tests
-        run: bazel test //test/...
+        run: bazel test //test/... --verbose_failures --test_output=all
       - name: Run examples
-        id: examples
-        run: cd examples && bazel test //basic/... -s
-        continue-on-error: true
-      - name: Debug - list flang runtime libs (Windows only)
-        if: runner.os == 'Windows'
-        run: |
-          cd examples
-          $flangDir = "$(bazel info output_base)/external/rules_fortran++flang+flang_windows_x86_64"
-          echo "=== flang lib/clang/21/lib/windows ==="
-          ls "$flangDir/lib/clang/21/lib/windows" 2>$null
-          echo "=== flang lib/clang/21/lib/x86_64-pc-windows-msvc ==="
-          ls "$flangDir/lib/clang/21/lib/x86_64-pc-windows-msvc" 2>$null
-      - name: Fail if examples failed
-        if: steps.examples.outcome == 'failure'
-        run: exit 1
+        run: cd examples && bazel test //basic/... --verbose_failures --test_output=all

@@ -68,6 +68,11 @@ def _fortran_test_impl(ctx):
     # Combine Fortran and C/C++ libraries
     all_libraries = fortran_libraries + cc_libraries
 
+    # Always include runtime libraries from toolchain (even if no deps)
+    # This ensures flang_rt and clang_rt are linked with correct order
+    runtime_libs = toolchain.runtime_libraries
+    all_libraries = all_libraries + runtime_libs
+
     # Combine all object files (Fortran + C/C++)
     all_objects = fortran_objects + cc_objects
 
@@ -89,7 +94,6 @@ def _fortran_test_impl(ctx):
             seen_libraries[lib] = True
 
     args.add("-o", executable.path)
-    args.add("-v")  # DEBUG: verbose output to see link command on CI
     args.add_all(toolchain.linker_flags)
 
     # Add link flags from dependencies
