@@ -70,7 +70,7 @@ def _includes_appear_in_compile_action_test_impl(ctx):
 
     # Check that includes appear as -I flags (resolved relative to package)
     compile_action = compile_actions[0]
-    # TODO: verify this full-path behavior matches rules_cc's cc_library includes
+    # Full-path behavior matches rules_cc convention, see #13
     assert_argv_contains_prefix(env, compile_action, "-Itest/unit/action_validation/include")
 
     return analysistest.end(env)
