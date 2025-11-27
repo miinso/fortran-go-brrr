@@ -89,6 +89,7 @@ def _fortran_test_impl(ctx):
             seen_libraries[lib] = True
 
     args.add("-o", executable.path)
+    args.add("-v")  # DEBUG: verbose output to see link command on CI
     args.add_all(toolchain.linker_flags)
 
     # Add link flags from dependencies

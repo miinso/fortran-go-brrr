@@ -27,4 +27,18 @@ jobs:
       - name: Run unit tests
         run: bazel test //test/...
       - name: Run examples
-        run: cd examples && bazel test ...
+        id: examples
+        run: cd examples && bazel test //basic/... -s
+        continue-on-error: true
+      - name: Debug - list flang runtime libs (Windows only)
+        if: runner.os == 'Windows'
+        run: |
+          cd examples
+          $flangDir = "$(bazel info output_base)/external/rules_fortran++flang+flang_windows_x86_64"
+          echo "=== flang lib/clang/21/lib/windows ==="
+          ls "$flangDir/lib/clang/21/lib/windows" 2>$null
+          echo "=== flang lib/clang/21/lib/x86_64-pc-windows-msvc ==="
+          ls "$flangDir/lib/clang/21/lib/x86_64-pc-windows-msvc" 2>$null
+      - name: Fail if examples failed
+        if: steps.examples.outcome == 'failure'
+        run: exit 1
