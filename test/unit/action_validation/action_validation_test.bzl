@@ -2,7 +2,7 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("//:defs.bzl", "fortran_library")
-load("//test/unit:common.bzl", "assert_argv_contains")
+load("//test/unit:common.bzl", "assert_argv_contains", "assert_argv_contains_prefix")
 
 def _copts_appear_in_compile_action_test_impl(ctx):
     """Test that copts are passed to the compiler."""
@@ -54,29 +54,30 @@ defines_appear_in_compile_action_test = analysistest.make(
     _defines_appear_in_compile_action_test_impl,
 )
 
-# def _includes_appear_in_compile_action_test_impl(ctx):
-#     """Test that includes are passed to the compiler."""
-#     env = analysistest.begin(ctx)
-#     target = analysistest.target_under_test(env)
+def _includes_appear_in_compile_action_test_impl(ctx):
+    """Test that includes are passed to the compiler."""
+    env = analysistest.begin(ctx)
+    target = analysistest.target_under_test(env)
 
-#     actions = analysistest.target_actions(env)
-#     compile_actions = [a for a in actions if a.mnemonic == "FortranCompile"]
+    actions = analysistest.target_actions(env)
+    compile_actions = [a for a in actions if a.mnemonic == "FortranCompile"]
 
-#     asserts.true(
-#         env,
-#         len(compile_actions) > 0,
-#         "Expected at least one FortranCompile action",
-#     )
+    asserts.true(
+        env,
+        len(compile_actions) > 0,
+        "Expected at least one FortranCompile action",
+    )
 
-#     # Check that includes appear as -I flags
-#     compile_action = compile_actions[0]
-#     assert_argv_contains_prefix(env, compile_action, "-Iinclude")
+    # Check that includes appear as -I flags (resolved relative to package)
+    compile_action = compile_actions[0]
+    # TODO: verify this full-path behavior matches rules_cc's cc_library includes
+    assert_argv_contains_prefix(env, compile_action, "-Itest/unit/action_validation/include")
 
-#     return analysistest.end(env)
+    return analysistest.end(env)
 
-# includes_appear_in_compile_action_test = analysistest.make(
-#     _includes_appear_in_compile_action_test_impl,
-# )
+includes_appear_in_compile_action_test = analysistest.make(
+    _includes_appear_in_compile_action_test_impl,
+)
 
 def _module_paths_in_compile_action_test_impl(ctx):
     """Test that module paths from deps appear in compile action."""
@@ -130,13 +131,13 @@ def action_validation_test_suite(name):
         tags = ["manual"],
     )
 
-    # # Test includes (not implemented yet, see #13)
-    # fortran_library(
-    #     name = "lib_with_includes",
-    #     srcs = ["simple_regular.f90"],
-    #     includes = ["include"],
-    #     tags = ["manual"],
-    # )
+    # Test includes
+    fortran_library(
+        name = "lib_with_includes",
+        srcs = ["simple_regular.f90"],
+        includes = ["include"],
+        tags = ["manual"],
+    )
 
     # Test module paths from deps
     fortran_library(
@@ -163,11 +164,10 @@ def action_validation_test_suite(name):
         target_under_test = ":lib_with_defines",
     )
 
-    # TODO(#13): enable when includes attribute is implemented
-    # includes_appear_in_compile_action_test(
-    #     name = "includes_appear_in_compile_action_test",
-    #     target_under_test = ":lib_with_includes",
-    # )
+    includes_appear_in_compile_action_test(
+        name = "includes_appear_in_compile_action_test",
+        target_under_test = ":lib_with_includes",
+    )
 
     module_paths_in_compile_action_test(
         name = "module_paths_in_compile_action_test",
@@ -180,7 +180,7 @@ def action_validation_test_suite(name):
         tests = [
             ":copts_appear_in_compile_action_test",
             ":defines_appear_in_compile_action_test",
-            # ":includes_appear_in_compile_action_test",  # TODO(#13)
+            ":includes_appear_in_compile_action_test",
             ":module_paths_in_compile_action_test",
         ],
     )

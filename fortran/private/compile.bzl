@@ -15,7 +15,7 @@ def _needs_preprocessing(src):
     ext = src.extension
     return ext in ["F", "F90", "F95", "F03", "F08"]
 
-def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
+def compile_fortran(ctx, toolchain, src, module_map, copts, defines = [], includes = []):
     """Compile a single Fortran source file.
 
     Args:
@@ -25,6 +25,7 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
         module_map: Dictionary of module names to module files
         copts: Additional compilation options
         defines: Preprocessor defines (e.g., ['_OPENMP', 'USE_MPI'])
+        includes: List of include directories to add to compile line
 
     Returns:
         CompileResultInfo with object and module files
@@ -84,6 +85,15 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = []):
     for dir_path in module_dirs:
         if toolchain.supports_module_path:
             args.add("-I" + dir_path)
+
+    # Include directories (resolved relative to package, like rules_cc)
+    package = ctx.label.package
+    for inc in includes:
+        if package:
+            inc_path = package + "/" + inc
+        else:
+            inc_path = inc
+        args.add("-I" + inc_path)
 
     # Compile command
     args.add("-c")

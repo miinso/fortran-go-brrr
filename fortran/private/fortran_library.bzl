@@ -52,6 +52,7 @@ def _fortran_library_impl(ctx):
             module_map = module_map,  # propagate child dependency `*.mod` files (if any)
             copts = ctx.attr.copts,
             defines = ctx.attr.defines,
+            includes = ctx.attr.includes,
         )
         objects.append(result.object)
         if result.module:
@@ -132,7 +133,7 @@ def _fortran_library_impl(ctx):
         linking_context = merged.linking_context
     else:
         compilation_context = cc_common.create_compilation_context()
-        linking_context = cc_common.create_linking_context(linker_inputs = depset([])) # can't be Null, hence the empty depset
+        linking_context = cc_common.create_linking_context(linker_inputs = depset([]))  # can't be Null, hence the empty depset
 
     return [
         DefaultInfo(files = depset(output_files)),

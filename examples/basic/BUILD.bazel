@@ -44,3 +44,10 @@ fortran_test(
     srcs = ["math_test.f90"],
     deps = [":math_lib"],
 )
+
+# INCLUDE example - demonstrates includes attribute for .inc files
+fortran_test(
+    name = "constants",
+    srcs = ["use_include.f90"],
+    includes = ["include"],
+)

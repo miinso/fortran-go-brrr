@@ -34,8 +34,6 @@ def _fortran_test_impl(ctx):
                     elif library.static_library != None:
                         cc_libraries.append(library.static_library)
 
-
-
                     # Collect object files
                     if hasattr(library, "objects") and library.objects != None:
                         cc_objects.extend(library.objects)
@@ -54,6 +52,7 @@ def _fortran_test_impl(ctx):
             module_map = module_map,
             copts = ctx.attr.copts,
             defines = ctx.attr.defines,
+            includes = ctx.attr.includes,
         )
         fortran_objects.append(result.object)
 
@@ -160,6 +159,9 @@ fortran_test = rule(
         ),
         "defines": attr.string_list(
             doc = "Preprocessor defines for .F files (e.g., ['_OPENMP', 'USE_MPI']).",
+        ),
+        "includes": attr.string_list(
+            doc = "List of include directories to add to the compile line.",
         ),
         "linkopts": attr.string_list(
             doc = "Additional linker options.",
