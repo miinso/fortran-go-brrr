@@ -35,4 +35,4 @@ jobs:
       - name: Run unit tests
         run: bazel test //test/... --verbose_failures --test_output=all
       - name: Run examples
-        run: cd examples && bazel test //basic/... --verbose_failures --test_output=all
+        run: cd examples && bazel test //basic:all //blas:all --verbose_failures --test_output=all
