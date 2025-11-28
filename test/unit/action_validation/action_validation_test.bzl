@@ -134,6 +134,18 @@ includes_dotdot_rejected_test = analysistest.make(
     expect_failure = True,
 )
 
+def _defines_with_lowercase_extension_rejected_test_impl(ctx):
+    """Test that defines with lowercase extension (.f90) is rejected."""
+    env = analysistest.begin(ctx)
+    # verify target *fails* and error message *contains* "uppercase"
+    asserts.expect_failure(env, "uppercase")
+    return analysistest.end(env)
+
+defines_with_lowercase_extension_rejected_test = analysistest.make(
+    _defines_with_lowercase_extension_rejected_test_impl,
+    expect_failure = True,
+)
+
 def _hdrs_inc_appear_in_compile_action_test_impl(ctx):
     """Test that .inc hdrs files appear as inputs to compile action."""
     env = analysistest.begin(ctx)
@@ -279,6 +291,19 @@ def action_validation_test_suite(name):
         target_under_test = ":lib_with_dotdot_includes",
     )
 
+    # Test that defines with lowercase extension (.f90) is rejected (see #14)
+    fortran_library(
+        name = "lib_with_defines_lowercase",
+        srcs = ["simple_regular.f90"],  # lowercase .f90 - no preprocessing
+        defines = ["USE_MPI"],  # defines require preprocessing!
+        tags = ["manual"],
+    )
+
+    defines_with_lowercase_extension_rejected_test(
+        name = "defines_with_lowercase_extension_rejected_test",
+        target_under_test = ":lib_with_defines_lowercase",
+    )
+
     # Test hdrs attribute with .inc files (see #17)
     fortran_library(
         name = "lib_with_inc_hdrs",
@@ -314,6 +339,7 @@ def action_validation_test_suite(name):
             ":includes_appear_in_compile_action_test",
             ":module_paths_in_compile_action_test",
             ":includes_dotdot_rejected_test",
+            ":defines_with_lowercase_extension_rejected_test",
             ":hdrs_inc_appear_in_compile_action_test",
             ":hdrs_mod_appear_in_compile_action_test",
         ],

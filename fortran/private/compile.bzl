@@ -68,6 +68,14 @@ def compile_fortran(ctx, toolchain, src, module_map, copts, defines = [], includ
         # Add target-specific preprocessor defines
         for define in defines:
             args.add("-D" + define)
+    elif defines:
+        # warn user that defines are ignored for lowercase extensions (see #14)
+        fail(
+            "defines = {} specified but source '{}' has lowercase extension. ".format(
+                defines,
+                src.basename,
+            ) + "Use uppercase extension (.F90, .F95, etc.) for preprocessing.",
+        )
 
     # Module output directory - where this compilation writes .mod files
     if toolchain.supports_module_path:
