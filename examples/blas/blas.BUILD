@@ -428,3 +428,9 @@ fortran_binary(
     visibility = ["//visibility:public"],
     deps = [":complex16_core"],
 )
+
+# export test input files for use by examples
+exports_files(
+    glob(["TESTING/*.in"]),
+    visibility = ["//visibility:public"],
+)

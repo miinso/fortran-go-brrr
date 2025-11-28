@@ -7,11 +7,16 @@ import os
 binary = sys.argv[1]
 input_file = sys.argv[2]
 
-# Bazel on Windows puts external repos in parent runfiles
-# 1) Strip "external/", 2) append "..", then 3) use the right slash
-# "external/_main~repo~blas/foo" -> "..\_main~repo~blas\foo"
+# Bazel runfiles paths:
+# - bzlmod: "../+_repo_rules+blas/sblat2" (already relative, needs normpath on Windows)
+# - WORKSPACE: "external/_main~repo~blas/foo" (needs "../" prefix + strip "external/")
 if os.name == 'nt':
-    binary = os.path.normpath(os.path.join('..', binary[9:]))
+    if binary.startswith('external/'):
+        # Old WORKSPACE-style path
+        binary = os.path.normpath(os.path.join('..', binary[9:]))
+    else:
+        # bzlmod-style path (already relative)
+        binary = os.path.normpath(binary)
 
 with open(input_file, 'r') as f:
     subprocess.run([binary], stdin=f, check=True, text=True)
