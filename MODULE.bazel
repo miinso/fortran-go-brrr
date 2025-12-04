@@ -15,6 +15,7 @@ bazel_dep(name = "stardoc", version = "0.6.2", dev_dependency = True)
 flang = use_extension("//fortran:extensions.bzl", "flang")
 use_repo(
     flang,
+    "flang",
     "flang_linux_x86_64",
     "flang_linux_aarch64",
     "flang_macos_x86_64",
@@ -28,5 +29,5 @@ register_toolchains(
     "//fortran/toolchains:macos_x86_64_toolchain",
     "//fortran/toolchains:macos_aarch64_toolchain",
     "//fortran/toolchains:windows_x86_64_toolchain",
-    "//fortran/toolchains:wasm_toolchain",
+    "//fortran/toolchains:emscripten_wasm32_toolchain",
 )

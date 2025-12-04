@@ -102,6 +102,13 @@ filegroup(
     }),
 )
 
+filegroup(
+    name = "wasm32_runtime_libraries",
+    srcs = glob([
+        "lib/clang/*/lib/wasm32-unknown-emscripten/libflang_rt.runtime.wasm32.a",
+    ], allow_empty = True),
+)
+
 exports_files(
     glob(["bin/*", "lib/*"], allow_empty = True),
 )
@@ -151,6 +158,47 @@ _flang_prebuilt = repository_rule(
     },
 )
 
+def _flang_host_alias_impl(repository_ctx):
+    """Create an alias repository pointing to the host platform's flang."""
+    _, os_type, arch = _get_platform_info(repository_ctx)
+
+    # Map to platform name
+    if os_type == "linux" and arch == "x86_64":
+        platform = "linux_x86_64"
+    elif os_type == "linux" and arch == "arm64":
+        platform = "linux_aarch64"
+    elif os_type == "macos" and arch == "x86_64":
+        platform = "macos_x86_64"
+    elif os_type == "macos" and arch == "arm64":
+        platform = "macos_aarch64"
+    elif os_type == "windows" and arch == "x86_64":
+        platform = "windows_x86_64"
+    else:
+        fail("Unsupported platform: {} {}".format(os_type, arch))
+
+    base_name = repository_ctx.attr.base_name
+
+    # Create BUILD.bazel with aliases to the platform-specific repo
+    repository_ctx.file("BUILD.bazel", """
+package(default_visibility = ["//visibility:public"])
+
+alias(name = "flang-new", actual = "@{base_name}_{platform}//:flang-new")
+alias(name = "llvm-ar", actual = "@{base_name}_{platform}//:llvm-ar")
+alias(name = "clang", actual = "@{base_name}_{platform}//:clang")
+alias(name = "lld", actual = "@{base_name}_{platform}//:lld")
+alias(name = "compiler_files", actual = "@{base_name}_{platform}//:compiler_files")
+alias(name = "all_files", actual = "@{base_name}_{platform}//:all_files")
+alias(name = "runtime_libraries", actual = "@{base_name}_{platform}//:runtime_libraries")
+alias(name = "wasm32_runtime_libraries", actual = "@{base_name}_{platform}//:wasm32_runtime_libraries")
+""".format(base_name = base_name, platform = platform))
+
+_flang_host_alias = repository_rule(
+    implementation = _flang_host_alias_impl,
+    attrs = {
+        "base_name": attr.string(mandatory = True),
+    },
+)
+
 def flang_register_toolchains(
         name = "flang",
         version = "v21.1.3",
@@ -177,3 +225,9 @@ def flang_register_toolchains(
             url_template = url_template,
             sha256 = sha256,
         )
+
+    # Create host alias repo (@flang -> @flang_<host_platform>)
+    _flang_host_alias(
+        name = name,
+        base_name = name,
+    )

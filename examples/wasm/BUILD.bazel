@@ -1,0 +1,52 @@
+# bidirectional interop between C and Fortran code
+
+load("@emsdk//emscripten_toolchain:wasm_cc_binary.bzl", "wasm_cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_fortran//fortran:defs.bzl", "fortran_library")
+
+####################################
+# Step 1: Compile Fortran to library
+fortran_library(
+    name = "hello",
+    srcs = ["hello.f90"],
+)
+
+# Step 2: Create cc_binary that links the Fortran library
+cc_binary(
+    name = "hello_cc",
+    deps = [":hello"],
+)
+
+# Step 3: Produce final wasm output
+# Note: output filenames must match cc_binary name
+wasm_cc_binary(
+    name = "hello_wasm",
+    cc_target = ":hello_cc",
+    outputs = [
+        "hello_cc.js",
+        "hello_cc.wasm",
+    ],
+)
+####################################
+
+# full lapacke client, only single for faster build
+cc_binary(
+    name = "full",
+    srcs = [
+        "full.c",
+    ],
+    deps = [
+        "@blas//:single",
+        "@lapack//:single",
+        "@lapacke//:single",
+    ],
+)
+
+wasm_cc_binary(
+    name = "full_wasm",
+    cc_target = ":full",
+    outputs = [
+        "full.js",
+        "full.wasm",
+    ],
+)

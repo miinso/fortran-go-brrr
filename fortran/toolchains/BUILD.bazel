@@ -182,45 +182,32 @@ toolchain(
     toolchain_type = "//fortran:toolchain_type",
 )
 
-# ===== WebAssembly Toolchain =====
-# All prebuilt binaries include wasm32 target support
+# ===== Emscripten WebAssembly Toolchain =====
+# Cross-compilation toolchain for wasm32-unknown-emscripten target
+# Uses @flang host alias (resolves to host platform's flang at repo fetch time)
 
 fortran_toolchain(
-    name = "wasm_toolchain_impl",
-    archiver = select({
-        "@platforms//os:linux": "@flang_linux_x86_64//:llvm-ar",
-        "@platforms//os:macos": "@flang_macos_aarch64//:llvm-ar",
-        "//conditions:default": "@flang_linux_x86_64//:llvm-ar",
-    }),
-    compiler = select({
-        "@platforms//os:linux": "@flang_linux_x86_64//:flang-new",
-        "@platforms//os:macos": "@flang_macos_aarch64//:flang-new",
-        "//conditions:default": "@flang_linux_x86_64//:flang-new",
-    }),
+    name = "emscripten_wasm32_toolchain_impl",
+    archiver = "@flang//:llvm-ar",
+    compiler = "@flang//:flang-new",
     compiler_flags = [
-        "--target=wasm32-unknown-unknown",
+        "--target=wasm32-unknown-emscripten",
         "-O2",
     ],
-    linker = select({
-        "@platforms//os:linux": "@flang_linux_x86_64//:lld",
-        "@platforms//os:macos": "@flang_macos_aarch64//:lld",
-        "//conditions:default": "@flang_linux_x86_64//:lld",
-    }),
-    linker_flags = [
-        "--target=wasm32-unknown-unknown",
-        "-fuse-ld=lld",
-    ],
+    linker = "@flang//:flang-new",
+    linker_flags = [],
     module_flag_format = "-J{}",
+    runtime_libraries = ["@flang//:wasm32_runtime_libraries"],
     supports_module_path = True,
 )
 
 toolchain(
-    name = "wasm_toolchain",
+    name = "emscripten_wasm32_toolchain",
     exec_compatible_with = [],
     target_compatible_with = [
         "@platforms//cpu:wasm32",
     ],
-    toolchain = ":wasm_toolchain_impl",
+    toolchain = ":emscripten_wasm32_toolchain_impl",
     toolchain_type = "//fortran:toolchain_type",
 )
 
@@ -231,11 +218,11 @@ toolchain(
 filegroup(
     name = "all_toolchains",
     srcs = [
+        ":emscripten_wasm32_toolchain",
         ":linux_aarch64_toolchain",
         ":linux_x86_64_toolchain",
         ":macos_aarch64_toolchain",
         ":macos_x86_64_toolchain",
-        ":wasm_toolchain",
         ":windows_x86_64_toolchain",
     ],
 )
