@@ -3,7 +3,7 @@
 # Supported platforms and their target triples
 PLATFORMS = {
     "linux_x86_64": "x86_64-unknown-linux-gnu",
-    "linux_aarch64": "aarch64-linux-gnu",
+    "linux_aarch64": "aarch64-unknown-linux-gnu",
     "macos_x86_64": "x86_64-apple-darwin",
     "macos_aarch64": "arm64-apple-darwin",
     "windows_x86_64": "x86_64-pc-windows-msvc",
@@ -25,9 +25,9 @@ def _get_platform_info(repository_ctx):
 
     if "linux" in os_name:
         if normalized_arch == "x86_64":
-            return "x86_64-unknown-linux-gnu-static", "linux", normalized_arch
+            return "x86_64-unknown-linux-gnu", "linux", normalized_arch
         elif normalized_arch == "arm64":
-            return "aarch64-linux-gnu", "linux", normalized_arch
+            return "aarch64-unknown-linux-gnu", "linux", normalized_arch
     elif "mac" in os_name or "darwin" in os_name:
         if normalized_arch == "x86_64":
             return "x86_64-apple-darwin", "macos", normalized_arch
