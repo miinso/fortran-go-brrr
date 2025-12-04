@@ -13,6 +13,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - ubuntu-24.04-arm
           - macos-15
           - macos-latest
           - windows-latest
@@ -20,6 +21,8 @@ jobs:
         include:
           - os: ubuntu-latest
             name: Linux x86_64
+          - os: ubuntu-24.04-arm
+            name: Linux ARM64
           - os: macos-15
             name: macOS x86_64
           - os: macos-latest
@@ -36,18 +39,6 @@ jobs:
         run: bazel test //test/... --verbose_failures --test_output=all
       - name: Run examples
         run: cd examples && bazel test //basic:all //blas:all --verbose_failures --test_output=all
-  wasm32:
-    runs-on: ubuntu-latest
-    name: wasm32-emscripten (Bazel 8.x)
-    env:
-      USE_BAZEL_VERSION: 8.x
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup emsdk
-        run: git clone --depth 1 --branch 4.0.20 https://github.com/emscripten-core/emsdk.git ../emsdk
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
       - name: Build wasm32 targets
         run: cd examples && bazel build //wasm:hello_wasm //wasm:full_wasm --verbose_failures
       - name: Run wasm32 tests
