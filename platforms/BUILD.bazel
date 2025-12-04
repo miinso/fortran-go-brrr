@@ -2,7 +2,7 @@
 
 package(default_visibility = ["//visibility:public"])
 
-# WebAssembly platform
+# WebAssembly platform (Emscripten)
 platform(
     name = "wasm32",
     constraint_values = [
