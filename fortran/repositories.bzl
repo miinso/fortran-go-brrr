@@ -114,8 +114,8 @@ exports_files(
 )
 """)
 
-def _flang_prebuilt_impl(repository_ctx):
-    """Download prebuilt Flang from GitHub releases."""
+def _flang_repository_impl(repository_ctx):
+    """Download Flang from GitHub releases."""
     target_triple, os_type, _ = _get_platform_info(repository_ctx)
 
     version = repository_ctx.attr.version
@@ -146,8 +146,8 @@ def _flang_prebuilt_impl(repository_ctx):
 
     _create_build_file(repository_ctx)
 
-_flang_prebuilt = repository_rule(
-    implementation = _flang_prebuilt_impl,
+_flang_repository = repository_rule(
+    implementation = _flang_repository_impl,
     attrs = {
         "version": attr.string(mandatory = True),
         "repo_owner": attr.string(mandatory = True),
@@ -203,7 +203,7 @@ def flang_register_toolchains(
         name = "flang",
         version = "v21.1.3",
         repo_owner = "miinso",
-        repo_name = "flang",
+        repo_name = "flang-releases",
         url_template = None,
         sha256 = {}):
     """Register Flang toolchains for all supported platforms.
@@ -212,12 +212,12 @@ def flang_register_toolchains(
         name: Base name for repositories (default: "flang")
         version: Flang version tag (default: "v21.1.3")
         repo_owner: GitHub repository owner (default: "miinso")
-        repo_name: GitHub repository name (default: "flang")
+        repo_name: GitHub repository name (default: "flang-releases")
         url_template: Custom URL template (optional)
         sha256: SHA256 checksums per target triple (optional)
     """
     for platform_name in PLATFORMS.keys():
-        _flang_prebuilt(
+        _flang_repository(
             name = "{}_{}".format(name, platform_name),
             version = version,
             repo_owner = repo_owner,
