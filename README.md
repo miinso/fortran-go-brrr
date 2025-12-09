@@ -1,6 +1,20 @@
 # rules_fortran
 
-Bazel rules for Fortran using LLVM Flang.
+Fortran rules for Bazel.
+
+[Documentation](https://miinso.github.io/rules_fortran/)
+
+## Supported Platforms
+
+| Host | Target |
+|------|--------|
+| Linux x86_64 | x86_64-unknown-linux-gnu |
+| Linux ARM64 | aarch64-unknown-linux-gnu |
+| macOS x86_64 | x86_64-apple-darwin |
+| macOS ARM64 | arm64-apple-darwin |
+| Windows x86_64 | x86_64-pc-windows-msvc |
+
+All platforms can cross-compile to `wasm32-unknown-emscripten`.
 
 ## Setup
 
@@ -68,9 +82,3 @@ cc_binary(
     deps = [":fortran_math"],
 )
 ```
-
-## Supported Platforms
-
-- Linux x86_64, aarch64
-- macOS x86_64, aarch64
-- Windows x86_64

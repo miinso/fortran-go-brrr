@@ -2,8 +2,26 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: "rules_fortran",
-  description: "Fortran rules for Bazel",
+  description: "Fortran rules for Bazel using LLVM Flang. Build Fortran libraries, binaries, and WebAssembly targets.",
   base: '/rules_fortran/',
+
+  head: [
+    ['meta', { name: 'keywords', content: 'fortran, bazel, rules, llvm, flang, wasm, webassembly' }],
+    ['meta', { name: 'author', content: 'Minseo Park' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:title', content: 'rules_fortran' }],
+    ['meta', { property: 'og:description', content: 'Fortran rules for Bazel' }],
+    ['meta', { property: 'og:url', content: 'https://miinso.github.io/rules_fortran/' }],
+    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ['meta', { name: 'twitter:title', content: 'rules_fortran' }],
+    ['meta', { name: 'twitter:description', content: 'Fortran rules for Bazel' }],
+  ],
+
+  sitemap: {
+    hostname: 'https://miinso.github.io/rules_fortran/'
+  },
+
+  lastUpdated: true,
 
   rewrites: {
     'reference/api.md': 'index.md'
