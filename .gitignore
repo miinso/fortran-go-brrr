@@ -26,3 +26,10 @@ Thumbs.db
 *.tmp
 *.bak
 .*.sw[op]
+
+# VitePress
+docs/node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+docs/reference/api.md
+docs/package-lock.json
