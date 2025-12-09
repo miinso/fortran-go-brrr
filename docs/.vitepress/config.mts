@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "rules_fortran",
   description: "Fortran rules for Bazel",
+  base: '/rules_fortran/',
 
   rewrites: {
     'reference/api.md': 'index.md'
