@@ -27,7 +27,8 @@ export default defineConfig({
         items: [
           { text: 'Installation', link: '/guide/installation' },
           { text: 'Quick Start', link: '/guide/quick-start' },
-          { text: 'Concepts', link: '/guide/concepts' }
+          { text: 'Concepts', link: '/guide/concepts' },
+          { text: 'Contributing', link: '/guide/contributing' }
         ]
       },
       {
