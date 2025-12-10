@@ -44,47 +44,42 @@ In C/C++, object files can be compiled in any order. In Fortran, sources must be
 
 ## How rules_fortran Handles This
 
-### Source Ordering Within a Target
-
-Within a single `fortran_library`, sources are compiled in the order listed in `srcs`. Each source can use modules produced by sources listed before it:
-
-```starlark
-fortran_library(
-    name = "mylib",
-    srcs = [
-        "a.f90",  # Defines module a
-        "b.f90",  # Can use a
-        "c.f90",  # Can use a and b
-    ],
-)
-```
-
-::: warning
-You must list sources in dependency order. If `b.f90` uses module `a`, then `a.f90` must appear before `b.f90` in the `srcs` list.
-:::
-
-### Module Propagation Across Targets
+### Module Propagation
 
 When one target depends on another, module files are propagated via `FortranInfo`:
 
+```
+a.f90: module a
+b.f90: module b, uses a
+c.f90: program c, uses a and b
+```
+
 ```starlark
 fortran_library(
-    name = "base",
-    srcs = ["base.f90"],  # Defines module base
+    name = "a",
+    srcs = ["a.f90"],
 )
 
 fortran_library(
-    name = "advanced",
-    srcs = ["advanced.f90"],  # Can use base
-    deps = [":base"],
+    name = "b",
+    srcs = ["b.f90"],
+    deps = [":a"],
+)
+
+fortran_binary(
+    name = "c",
+    srcs = ["c.f90"],
+    deps = [":a", ":b"],
 )
 ```
 
-The `deps` attribute makes all modules from `:base` available when compiling `advanced.f90`.
+The `deps` attribute makes all modules from dependencies available when compiling.
+
+Unlike C/C++ headers which are just textual includes, Fortran modules are compiled artifacts. The build system must ensure modules are compiled before their users - this is handled automatically through `deps`.
 
 ### C Interoperability
 
-Fortran 2003 introduced `iso_c_binding` for calling C functions and being called from C. rules_fortran provides `CcInfo` from `fortran_library`, enabling:
+rules_fortran provides `CcInfo` from `fortran_library`, enabling:
 
 - `cc_binary` / `cc_library` / `cc_test` can depend on `fortran_library`
 - `fortran_binary` / `fortran_library` / `fortran_test` can depend on `cc_library`
